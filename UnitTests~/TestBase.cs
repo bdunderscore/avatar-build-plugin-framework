@@ -18,10 +18,10 @@ namespace UnitTests
     {
         private const string TEMP_ASSET_PATH = "Assets/ZZZ_Temp";
         private static Dictionary<System.Type, string> _scriptToDirectory = null;
-        private List<GameObject> objects;
+        private List<Object> objects;
 
         [SetUp]
-        public virtual void Setup()
+        public virtual void TestBaseSetup()
         {
             if (_scriptToDirectory == null)
             {
@@ -38,11 +38,17 @@ namespace UnitTests
             }
             
             //BuildReport.Clear();
-            objects = new List<GameObject>();
+            objects = new ();
+        }
+        
+        protected T TrackObject<T>(T obj) where T : Object
+        {
+            objects.Add(obj);
+            return obj;
         }
 
         [TearDown]
-        public virtual void Teardown()
+        public virtual void TestBaseTeardown()
         {
             foreach (var obj in objects)
             {
