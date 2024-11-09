@@ -22,8 +22,9 @@ namespace nadena.dev.ndmf.animator
     {
         private readonly Dictionary<object, object> _commitCache = new();
 
-        internal R CommitObject<R>(ICommitable<R> obj)
+        internal R CommitObject<R>(ICommitable<R> obj) where R : class
         {
+            if (obj == null) return null;
             if (_commitCache.TryGetValue(obj, out var result)) return (R)result;
 
             var resultObj = obj.Prepare(this);

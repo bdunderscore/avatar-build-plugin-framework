@@ -65,6 +65,11 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
+        public VirtualStateMachine Clone(AnimatorStateMachine stateMachine)
+        {
+            return GetOrClone(stateMachine, VirtualStateMachine.Clone);
+        }
+
         public VirtualTransition Clone(AnimatorTransitionBase transition)
         {
             return GetOrClone(transition, VirtualTransition.Clone);
