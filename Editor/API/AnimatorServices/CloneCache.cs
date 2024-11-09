@@ -8,14 +8,14 @@ namespace nadena.dev.ndmf.animator
     public class CloneContext
     {
         public IPlatformAnimatorBindings PlatformBindings { get; private set; }
-        private readonly Dictionary<object, object> _clones = new();
+        private readonly Dictionary<object, IDisposable> _clones = new();
 
         public CloneContext(IPlatformAnimatorBindings platformBindings)
         {
             PlatformBindings = platformBindings;
         }
 
-        public bool TryGetValue<T, U>(T key, out U value)
+        public bool TryGetValue<T, U>(T key, out U value) where U: IDisposable
         {
             var rv = _clones.TryGetValue(key, out var tmp);
 
@@ -25,12 +25,12 @@ namespace nadena.dev.ndmf.animator
             return rv;
         }
 
-        public void Add<T, U>(T key, U value)
+        public void Add<T, U>(T key, U value) where U: IDisposable
         {
             _clones.Add(key, value);
         }
 
-        private U GetOrClone<T, U>(T key, Func<CloneContext, T, U> clone) where U : class
+        private U GetOrClone<T, U>(T key, Func<CloneContext, T, U> clone) where U : class, IDisposable
         {
             if (key == null) return null;
             if (TryGetValue(key, out U value)) return value;
@@ -39,6 +39,10 @@ namespace nadena.dev.ndmf.animator
             return value;
         }
 
+        public VirtualTransition Clone(AnimatorTransitionBase transition)
+        {
+            return GetOrClone(transition, VirtualTransition.Clone);
+        }
 
         public VirtualState Clone(AnimatorState state)
         {

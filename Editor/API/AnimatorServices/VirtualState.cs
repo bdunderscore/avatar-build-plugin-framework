@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class VirtualState : ICommitable<AnimatorState>
+    public class VirtualState : ICommitable<AnimatorState>, IDisposable
     {
         private AnimatorState _state;
 
@@ -138,12 +140,27 @@ namespace nadena.dev.ndmf.animator
         
         AnimatorState ICommitable<AnimatorState>.Prepare(CommitContext context)
         {
-            _state.behaviours = Behaviours.ToArray();
             return _state;
         }
 
         void ICommitable<AnimatorState>.Commit(CommitContext context, AnimatorState obj)
         {
+            obj.behaviours = Behaviours.ToArray();
+
+            _state = null;
+        }
+        
+        void IDisposable.Dispose()
+        {
+            foreach (var behaviour in Behaviours)
+            {
+                Object.DestroyImmediate(behaviour);
+            }
+            
+            Behaviours.Clear();
+            
+            if (_state != null) Object.DestroyImmediate(_state);
+            _state = null;
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEditor.Animations;
+using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class VirtualTransition : ICommitable<AnimatorTransitionBase>
+    public class VirtualTransition : ICommitable<AnimatorTransitionBase>, IDisposable
     {
         private AnimatorTransitionBase _transition;
 
@@ -17,6 +18,45 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
+        public static VirtualTransition Clone(
+            CloneContext context,
+            AnimatorTransitionBase transition
+        )
+        {
+            if (transition == null) return null;
+
+            if (context.TryGetValue(transition, out VirtualTransition clone)) return clone;
+
+            var cloned = Object.Instantiate(transition);
+            cloned.name = transition.name;
+            
+            return new VirtualTransition(context, cloned);
+        }
+        
+        private VirtualTransition(CloneContext context, AnimatorTransitionBase cloned)
+        {
+            _transition = cloned;
+            
+            if (cloned.destinationState != null)
+            {
+                SetDestination(context.Clone(cloned.destinationState));
+            }
+            else if (cloned.destinationStateMachine != null)
+            {
+                // SetDestination(context.Clone(cloned.destinationStateMachine));
+            }
+            else if (cloned.isExit)
+            {
+                SetExitDestination();
+            }
+        }
+
+        public string Name
+        {
+            get => _transition.name;
+            set => _transition.name = value;
+        }
+        
         // AnimatorStateTransition
         public bool CanTransitionToSelf
         {
@@ -66,7 +106,21 @@ namespace nadena.dev.ndmf.animator
 
         // AnimatorTransitionBase
 
-        public List<AnimatorCondition> Conditions { get; set; }
+        private List<AnimatorCondition> _conditions;
+
+        public List<AnimatorCondition> Conditions
+        {
+            get
+            {
+                _conditions ??= new List<AnimatorCondition>(_transition.conditions);
+                return _conditions;
+            }
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(value));
+                _conditions = value;
+            }
+        }
 
         public void SetDestination(VirtualState state)
         {
@@ -96,14 +150,14 @@ namespace nadena.dev.ndmf.animator
 
         public bool Mute
         {
-            get => _stateTransition.mute;
-            set => _stateTransition.mute = value;
+            get => _transition.mute;
+            set => _transition.mute = value;
         }
 
         public bool Solo
         {
-            get => _stateTransition.solo;
-            set => _stateTransition.solo = value;
+            get => _transition.solo;
+            set => _transition.solo = value;
         }
 
         AnimatorTransitionBase ICommitable<AnimatorTransitionBase>.Prepare(CommitContext context)
@@ -111,16 +165,31 @@ namespace nadena.dev.ndmf.animator
             return _transition;
         }
 
-        void ICommitable<AnimatorTransitionBase>.Commit(CommitContext context, AnimatorTransitionBase _)
+        void ICommitable<AnimatorTransitionBase>.Commit(CommitContext context, AnimatorTransitionBase obj)
         {
+            _transition = null;
+            
             if (DestinationState != null)
             {
-                _stateTransition.destinationState = context.CommitObject(DestinationState);
+                obj.destinationState = context.CommitObject(DestinationState);
+                obj.destinationStateMachine = null;
             }
             else if (DestinationStateMachine != null)
             {
-                _stateTransition.destinationStateMachine = context.CommitObject(DestinationStateMachine);
+                obj.destinationState = null;
+                obj.destinationStateMachine = context.CommitObject(DestinationStateMachine);
             }
+            else
+            {
+                obj.destinationState = null;
+                obj.destinationStateMachine = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_transition != null) Object.DestroyImmediate(_transition);
+            _transition = null;
         }
     }
 }

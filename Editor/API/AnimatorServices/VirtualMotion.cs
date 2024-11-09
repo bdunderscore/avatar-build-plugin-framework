@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
 {
-    public abstract class VirtualMotion : ICommitable<Motion>
+    public abstract class VirtualMotion : ICommitable<Motion>, IDisposable
     {
         internal VirtualMotion()
         {
@@ -37,5 +37,7 @@ namespace nadena.dev.ndmf.animator
         {
             Commit(context, obj);
         }
+
+        public abstract void Dispose();
     }
 }
