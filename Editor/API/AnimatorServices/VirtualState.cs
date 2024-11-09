@@ -125,7 +125,7 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        public List<VirtualTransition> Transitions { get; set; }
+        public List<VirtualStateTransition> Transitions { get; set; }
 
         public bool WriteDefaultValues
         {

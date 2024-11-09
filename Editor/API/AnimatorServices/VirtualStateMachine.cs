@@ -26,12 +26,12 @@ namespace nadena.dev.ndmf.animator
                 vsm.Name = stateMachine.name;
                 vsm.AnyStatePosition = stateMachine.anyStatePosition;
                 vsm.AnyStateTransitions = stateMachine.anyStateTransitions
-                    .Select(t => VirtualTransition.Clone(context, t)).ToList();
+                    .Select(t => VirtualStateTransition.Clone(context, t)).ToList();
                 vsm.Behaviours = stateMachine.behaviours.Select(Object.Instantiate).ToList();
                 vsm.DefaultState = VirtualState.Clone(context, stateMachine.defaultState);
                 vsm.EntryPosition = stateMachine.entryPosition;
-                vsm.EntryTransitions = stateMachine.entryTransitions.Select(t => VirtualTransition.Clone(context, t))
-                    .ToList();
+                vsm.EntryTransitions = stateMachine.entryTransitions
+                    .Select(t => VirtualTransition.Clone(context, t)).ToList();
                 vsm.ExitPosition = stateMachine.exitPosition;
                 vsm.ParentStateMachinePosition = stateMachine.parentStateMachinePosition;
 
@@ -94,7 +94,7 @@ namespace nadena.dev.ndmf.animator
         public Vector3 ParentStateMachinePosition { get; set; }
 
         public List<VirtualTransition> EntryTransitions { get; set; }
-        public List<VirtualTransition> AnyStateTransitions { get; set; }
+        public List<VirtualStateTransition> AnyStateTransitions { get; set; }
         public List<StateMachineBehaviour> Behaviours { get; set; }
 
         public List<VirtualChildStateMachine> StateMachines { get; set; }

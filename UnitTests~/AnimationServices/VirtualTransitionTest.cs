@@ -5,59 +5,89 @@ using UnityEditor.Animations;
 
 namespace UnitTests.AnimationServices
 {
-    public class VirtualTransitionTest : TestBase
+    public class VirtualStateTransitionTest : TestBase
     {
         // This method is copypasted a bit due to limitations of C#'s type system - specifically,
         // I can't put this into a base class, because that would force ICommitable to be public.
-        private void AssertPreserveProperty<T>(
-            Func<T> create,
-            Action<T> setup,
-            Action<VirtualTransition> setupViaVirtualState,
-            Action<T> assert,
-            Action<VirtualTransition> assertViaVirtualState
-        ) where T: AnimatorTransitionBase
+        private void AssertPreservePropertyST(
+            Func<AnimatorStateTransition> create,
+            Action<AnimatorStateTransition> setup,
+            Action<VirtualStateTransition> setupViaVirtualState,
+            Action<AnimatorStateTransition> assert,
+            Action<VirtualStateTransition> assertViaVirtualState
+        )
         {
             var transition = create();
             setup(transition);
 
             var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
 
-            VirtualTransition virtualTransition = cloneContext.Clone(transition);
-            assertViaVirtualState(virtualTransition);
+            VirtualStateTransition virtualStateTransition = cloneContext.Clone(transition);
+            assertViaVirtualState(virtualStateTransition);
 
             var commitContext = new CommitContext();
-            var committed = commitContext.CommitObject(virtualTransition);
+            var committed = (AnimatorStateTransition) commitContext.CommitObject(virtualStateTransition);
             Assert.AreNotEqual(transition, committed);
-            assert((T) committed);
+            assert(committed);
             
             UnityEngine.Object.DestroyImmediate(transition);
             UnityEngine.Object.DestroyImmediate(committed);
 
             transition = create();
 
-            virtualTransition = cloneContext.Clone(transition);
-            setupViaVirtualState(virtualTransition);
+            virtualStateTransition = cloneContext.Clone(transition);
+            setupViaVirtualState(virtualStateTransition);
             
-            committed = commitContext.CommitObject(virtualTransition);
+            committed = (AnimatorStateTransition) commitContext.CommitObject(virtualStateTransition);
             
-            assert((T) committed);
+            assert(committed);
             
             UnityEngine.Object.DestroyImmediate(transition);
             UnityEngine.Object.DestroyImmediate(committed);
+        }
+        
+        private void AssertPreserveProperty(
+            Func<AnimatorTransition> create,
+            Action<AnimatorTransition> setup,
+            Action<VirtualTransition> setupViaVirtualState,
+            Action<AnimatorTransition> assert,
+            Action<VirtualTransition> assertViaVirtualState
+        )
+        {
+            var transition = create();
+            setup(transition);
+
+            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+
+            VirtualTransition virtualStateTransition = cloneContext.Clone(transition);
+            assertViaVirtualState(virtualStateTransition);
+
+            var commitContext = new CommitContext();
+            var committed = (AnimatorTransition) commitContext.CommitObject(virtualStateTransition);
+            Assert.AreNotEqual(transition, committed);
+            assert(committed);
             
-            // For properties specific to AnimatorStateTransition, make sure we throw on AnimatorTransitions
-            if (committed is not AnimatorStateTransition) return;
+            UnityEngine.Object.DestroyImmediate(transition);
+            UnityEngine.Object.DestroyImmediate(committed);
+
+            transition = create();
+
+            virtualStateTransition = cloneContext.Clone(transition);
+            setupViaVirtualState(virtualStateTransition);
             
-            var genericTransition = new AnimatorTransition();
-            virtualTransition = cloneContext.Clone(genericTransition);
-            Assert.Throws<InvalidOperationException>(() => setupViaVirtualState(virtualTransition));
+            committed = (AnimatorTransition) commitContext.CommitObject(virtualStateTransition);
+            
+            assert(committed);
+            
+            UnityEngine.Object.DestroyImmediate(transition);
+            UnityEngine.Object.DestroyImmediate(committed);
         }
         
         
         [Test]
         public void PreservesCanTransitionToSelf()
         {
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () => new AnimatorStateTransition(),
                 transition => transition.canTransitionToSelf = true,
                 virtualTransition => virtualTransition.CanTransitionToSelf = true,
@@ -69,7 +99,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesDuration()
         {
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () => new AnimatorStateTransition(),
                 transition => transition.duration = 0.5f,
                 virtualTransition => virtualTransition.Duration = 0.5f,
@@ -81,7 +111,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesExitTime()
         {
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () => new AnimatorStateTransition(),
                 transition =>
                 {
@@ -98,7 +128,7 @@ namespace UnitTests.AnimationServices
             );
             
             // Reset to null after creation
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () =>
                 {
                     var t = new AnimatorStateTransition();
@@ -117,7 +147,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesHasFixedDuration()
         {
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () => new AnimatorStateTransition(),
                 transition => transition.hasFixedDuration = true,
                 virtualTransition => virtualTransition.HasFixedDuration = true,
@@ -129,7 +159,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesInterruptionSource()
         {
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () => new AnimatorStateTransition(),
                 transition => transition.interruptionSource = TransitionInterruptionSource.Destination,
                 virtualTransition => virtualTransition.InterruptionSource = TransitionInterruptionSource.Destination,
@@ -141,7 +171,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesOffset()
         {
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () => new AnimatorStateTransition(),
                 transition => transition.offset = 0.5f,
                 virtualTransition => virtualTransition.Offset = 0.5f,
@@ -153,7 +183,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesOrderedInterruption()
         {
-            AssertPreserveProperty(
+            AssertPreservePropertyST(
                 () => new AnimatorStateTransition(),
                 transition => transition.orderedInterruption = true,
                 virtualTransition => virtualTransition.OrderedInterruption = true,
