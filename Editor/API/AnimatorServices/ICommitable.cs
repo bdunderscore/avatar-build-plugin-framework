@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -21,6 +22,8 @@ namespace nadena.dev.ndmf.animator
     internal class CommitContext
     {
         private readonly Dictionary<object, object> _commitCache = new();
+        private readonly Dictionary<int, VirtualLayer> _virtIndexToVirtLayer = new();
+        private readonly Dictionary<VirtualLayer, int> _virtLayerToPhysIndex = new();
 
         internal R CommitObject<R>(ICommitable<R> obj) where R : class
         {
@@ -33,6 +36,42 @@ namespace nadena.dev.ndmf.animator
             obj.Commit(this, resultObj);
 
             return resultObj;
+        }
+
+        public void RegisterVirtualLayerMapping(VirtualLayer virtualLayer, int virtualLayerIndex)
+        {
+            _virtIndexToVirtLayer[virtualLayerIndex] = virtualLayer;
+        }
+
+        public void RegisterPhysicalLayerMapping(int physicalLayerIndex, VirtualLayer virtualLayer)
+        {
+            _virtLayerToPhysIndex[virtualLayer] = physicalLayerIndex;
+        }
+
+        public int VirtualToPhysicalLayerIndex(int index)
+        {
+            if (_virtIndexToVirtLayer.TryGetValue(index, out var virtLayer)
+                && _virtLayerToPhysIndex.TryGetValue(virtLayer, out var physIndex)
+               )
+            {
+                return physIndex;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        ///     Destroys all objects committed in this context. Primarily intended for test cleanup.
+        /// </summary>
+        public void DestroyAllImmediate()
+        {
+            foreach (var obj in _commitCache.Values)
+            {
+                if (obj is Object unityObj)
+                {
+                    Object.DestroyImmediate(unityObj);
+                }
+            }
         }
     }
 }

@@ -51,9 +51,18 @@ namespace nadena.dev.ndmf.animator
             return vsm;
         }
 
-        private VirtualStateMachine()
+        public VirtualStateMachine()
         {
             _stateMachine = new AnimatorStateMachine();
+            AnyStatePosition = _stateMachine.anyStatePosition;
+            EntryPosition = _stateMachine.entryPosition;
+            ExitPosition = _stateMachine.exitPosition;
+
+            EntryTransitions = new List<VirtualTransition>();
+            AnyStateTransitions = new List<VirtualStateTransition>();
+            Behaviours = new List<StateMachineBehaviour>();
+            StateMachines = new List<VirtualChildStateMachine>();
+            States = new List<VirtualChildState>();
         }
         
         AnimatorStateMachine ICommitable<AnimatorStateMachine>.Prepare(CommitContext context)

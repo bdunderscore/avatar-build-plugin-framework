@@ -10,12 +10,13 @@ namespace nadena.dev.ndmf.animator
         public IPlatformAnimatorBindings PlatformBindings { get; private set; }
         private readonly Dictionary<object, IDisposable> _clones = new();
 
-        private int _cloneDepth;
+        private int _cloneDepth, _nextVirtualLayer, _virtualLayerBase, _maxMappedPhysLayer;
         private readonly Queue<Action> _deferredCalls = new();
 
         public CloneContext(IPlatformAnimatorBindings platformBindings)
         {
             PlatformBindings = platformBindings;
+            _nextVirtualLayer = _virtualLayerBase = 0x10_0000;
         }
 
         public bool TryGetValue<T, U>(T key, out U value) where U: IDisposable
@@ -65,6 +66,26 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
+        internal int AllocateVirtualLayerSpace(int n)
+        {
+            var layerStart = _nextVirtualLayer;
+            _nextVirtualLayer += n;
+            _virtualLayerBase = layerStart;
+            _maxMappedPhysLayer = n;
+
+            return layerStart;
+        }
+
+        internal int AllocateSingleVirtualLayer()
+        {
+            return _nextVirtualLayer++;
+        }
+
+        public VirtualLayer Clone(AnimatorControllerLayer layer, int index)
+        {
+            return GetOrClone(layer, (ctx, obj) => VirtualLayer.Clone(ctx, obj, index));
+        }
+        
         public VirtualStateMachine Clone(AnimatorStateMachine stateMachine)
         {
             return GetOrClone(stateMachine, VirtualStateMachine.Clone);
@@ -99,6 +120,13 @@ namespace nadena.dev.ndmf.animator
         {
             if (_cloneDepth > 0) _deferredCalls.Enqueue(action);
             else action();
+        }
+
+        public int CloneSourceToVirtualLayerIndex(int layerSyncedLayerIndex)
+        {
+            return layerSyncedLayerIndex < _maxMappedPhysLayer && layerSyncedLayerIndex >= 0
+                ? layerSyncedLayerIndex + _virtualLayerBase
+                : -1;
         }
     }
 }
