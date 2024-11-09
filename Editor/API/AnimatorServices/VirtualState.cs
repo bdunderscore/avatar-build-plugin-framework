@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -23,8 +24,9 @@ namespace nadena.dev.ndmf.animator
 
             if (context.TryGetValue(state, out VirtualState clone)) return clone;
 
-            var clonedState = Object.Instantiate(state);
-            clonedState.name = state.name;
+            var clonedState = new AnimatorState();
+            // We can't use Instantiate for AnimatorStates, for some reason...
+            EditorUtility.CopySerialized(state, clonedState);
 
             return new VirtualState(context, clonedState);
         }
@@ -35,7 +37,7 @@ namespace nadena.dev.ndmf.animator
 
             // TODO: Should we rewrite any internal properties of these StateMachineBehaviours?
             Behaviours = _state.behaviours.Select(b => Object.Instantiate(b)).ToList();
-            //Transitions = _state.transitions.Select(t => VirtualTransition.Clone(context, t)).ToList();
+            context.DeferCall(() => { Transitions = _state.transitions.Select(context.Clone).ToList(); });
             Motion = context.Clone(_state.motion);
         }
 
@@ -146,6 +148,7 @@ namespace nadena.dev.ndmf.animator
         void ICommitable<AnimatorState>.Commit(CommitContext context, AnimatorState obj)
         {
             obj.behaviours = Behaviours.ToArray();
+            obj.transitions = Transitions.Select(t => (AnimatorStateTransition)context.CommitObject(t)).ToArray();
 
             _state = null;
         }

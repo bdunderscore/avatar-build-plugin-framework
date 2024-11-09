@@ -10,6 +10,9 @@ namespace nadena.dev.ndmf.animator
         public IPlatformAnimatorBindings PlatformBindings { get; private set; }
         private readonly Dictionary<object, IDisposable> _clones = new();
 
+        private int _cloneDepth;
+        private readonly Queue<Action> _deferredCalls = new();
+
         public CloneContext(IPlatformAnimatorBindings platformBindings)
         {
             PlatformBindings = platformBindings;
@@ -32,11 +35,34 @@ namespace nadena.dev.ndmf.animator
 
         private U GetOrClone<T, U>(T key, Func<CloneContext, T, U> clone) where U : class, IDisposable
         {
-            if (key == null) return null;
-            if (TryGetValue(key, out U value)) return value;
-            value = clone(this, key);
-            Add(key, value);
-            return value;
+            try
+            {
+                _cloneDepth++;
+
+                if (key == null) return null;
+                if (TryGetValue(key, out U value)) return value;
+                value = clone(this, key);
+                Add(key, value);
+                return value;
+            }
+            finally
+            {
+                if (--_cloneDepth == 0)
+                {
+                    // Flush deferred actions. Note that deferred actions might spawn other clones, so be careful not
+                    // to recurse while flushing.
+                    try
+                    {
+                        _cloneDepth++;
+
+                        while (_deferredCalls.TryDequeue(out var action)) action();
+                    }
+                    finally
+                    {
+                        _cloneDepth--;
+                    }
+                }
+            }
         }
 
         public VirtualTransition Clone(AnimatorTransitionBase transition)
@@ -57,6 +83,12 @@ namespace nadena.dev.ndmf.animator
         public VirtualClip Clone(AnimationClip clip)
         {
             return GetOrClone(clip, VirtualClip.Clone);
+        }
+
+        public void DeferCall(Action action)
+        {
+            if (_cloneDepth > 0) _deferredCalls.Enqueue(action);
+            else action();
         }
     }
 }

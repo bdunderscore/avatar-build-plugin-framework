@@ -36,19 +36,22 @@ namespace nadena.dev.ndmf.animator
         private VirtualTransition(CloneContext context, AnimatorTransitionBase cloned)
         {
             _transition = cloned;
-            
-            if (cloned.destinationState != null)
+
+            context.DeferCall(() =>
             {
-                SetDestination(context.Clone(cloned.destinationState));
-            }
-            else if (cloned.destinationStateMachine != null)
-            {
-                // SetDestination(context.Clone(cloned.destinationStateMachine));
-            }
-            else if (cloned.isExit)
-            {
-                SetExitDestination();
-            }
+                if (cloned.destinationState != null)
+                {
+                    SetDestination(context.Clone(cloned.destinationState));
+                }
+                else if (cloned.destinationStateMachine != null)
+                {
+                    // SetDestination(context.Clone(cloned.destinationStateMachine));
+                }
+                else if (cloned.isExit)
+                {
+                    SetExitDestination();
+                }
+            });
         }
 
         public string Name
@@ -146,7 +149,7 @@ namespace nadena.dev.ndmf.animator
         public VirtualState DestinationState { get; private set; }
         public VirtualStateMachine DestinationStateMachine { get; private set; }
 
-        public bool ExitIsDestination => _stateTransition.isExit;
+        public bool IsExit => _stateTransition.isExit;
 
         public bool Mute
         {
