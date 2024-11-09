@@ -131,22 +131,37 @@ namespace nadena.dev.ndmf.animator
         /// <param name="context"></param>
         /// <param name="clip"></param>
         /// <returns></returns>
-        public static VirtualClip Clone(BuildContext context, AnimationClip clip)
+        public static VirtualClip Clone(
+            CloneContext cloneContext,
+            AnimationClip clip
+        )
         {
-            // TODO: Probably pass some dedicated context rather than BuildContext
+            if (clip == null) return null;
+
+            if (cloneContext.PlatformBindings.IsSpecialMotion(clip))
+            {
+                return FromMarker(clip);
+            }
+
+            if (cloneContext?.TryGetValue(clip, out VirtualClip clonedClip) == true)
+            {
+                return clonedClip;
+            }
 
             var newClip = Object.Instantiate(clip);
             newClip.name = clip.name;
+
+            var virtualClip = new VirtualClip(newClip, false);
+            // Add early to avoid infinite recursion
+            cloneContext.Add(clip, virtualClip);
 
             VirtualClip refPoseClip = null;
             var settings = AnimationUtility.GetAnimationClipSettings(clip);
             if (settings.additiveReferencePoseClip != null)
             {
-                // TODO: Cache in build context?
-                refPoseClip = Clone(context, settings.additiveReferencePoseClip);
+                refPoseClip = cloneContext.Clone(settings.additiveReferencePoseClip);
             }
 
-            var virtualClip = new VirtualClip(newClip, false);
             virtualClip.AdditiveReferencePoseClip = refPoseClip;
             virtualClip.AdditiveReferencePoseTime = settings.additiveReferencePoseTime;
 

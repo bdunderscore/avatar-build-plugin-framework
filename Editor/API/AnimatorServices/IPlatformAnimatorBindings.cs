@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
 {
-    internal interface IPlatformAnimatorBindings
+    public interface IPlatformAnimatorBindings
     {
         /// <summary>
         ///     If true, the motion asset should be maintained as-is without replacement or modification.

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -6,6 +7,18 @@ namespace nadena.dev.ndmf.animator
     {
         internal VirtualMotion()
         {
+        }
+
+        public static VirtualMotion Clone(
+            CloneContext context,
+            Motion motion
+        )
+        {
+            switch (motion)
+            {
+                case AnimationClip clip: return Clone(context, motion);
+                default: throw new NotImplementedException();
+            }
         }
 
 

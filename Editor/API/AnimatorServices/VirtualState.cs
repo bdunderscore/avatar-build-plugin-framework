@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -12,6 +12,39 @@ namespace nadena.dev.ndmf.animator
 
         public List<StateMachineBehaviour> Behaviours { get; set; }
 
+        public static VirtualState Clone(
+            CloneContext context,
+            AnimatorState state
+        )
+        {
+            if (state == null) return null;
+
+            if (context.TryGetValue(state, out VirtualState clone)) return clone;
+
+            var clonedState = Object.Instantiate(state);
+            clonedState.name = state.name;
+
+            return new VirtualState(context, clonedState);
+        }
+
+        private VirtualState(CloneContext context, AnimatorState clonedState)
+        {
+            _state = clonedState;
+
+            // TODO: Should we rewrite any internal properties of these StateMachineBehaviours?
+            Behaviours = _state.behaviours.Select(b => Object.Instantiate(b)).ToList();
+            //Transitions = _state.transitions.Select(t => VirtualTransition.Clone(context, t)).ToList();
+            Motion = context.Clone(_state.motion);
+        }
+
+        public VirtualMotion Motion { get; set; }
+
+        public string Name
+        {
+            get => _state.name;
+            set => _state.name = value;
+        }
+        
         public float CycleOffset
         {
             get => _state.cycleOffset;
@@ -102,16 +135,15 @@ namespace nadena.dev.ndmf.animator
         // AddStateMachineBehaviour
         // AddTransition
         // RemoveTransition
-
-
+        
         AnimatorState ICommitable<AnimatorState>.Prepare(CommitContext context)
         {
-            throw new NotImplementedException();
+            _state.behaviours = Behaviours.ToArray();
+            return _state;
         }
 
         void ICommitable<AnimatorState>.Commit(CommitContext context, AnimatorState obj)
         {
-            throw new NotImplementedException();
         }
     }
 }

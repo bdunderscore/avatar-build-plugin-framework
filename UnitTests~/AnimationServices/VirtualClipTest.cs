@@ -12,13 +12,18 @@ namespace UnitTests.AnimationServices
     public class VirtualClipTest : TestBase
     {
         private GameObject avatarRoot;
-        private BuildContext context;
+        private CloneContext context;
         
         [SetUp]
         public void Setup()
         {
             avatarRoot = CreateRoot("root");
-            context = CreateContext(avatarRoot);
+            context = CreateCloneContext();
+        }
+
+        private CloneContext CreateCloneContext()
+        {
+            return new CloneContext(new GenericPlatformAnimatorBindings());
         }
 
         AnimationClip Commit(VirtualClip clip)
