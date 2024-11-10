@@ -81,6 +81,11 @@ namespace nadena.dev.ndmf.animator
             return _nextVirtualLayer++;
         }
 
+        public VirtualAnimatorController Clone(AnimatorController controller)
+        {
+            return GetOrClone(controller, VirtualAnimatorController.Clone);
+        }
+        
         public VirtualLayer Clone(AnimatorControllerLayer layer, int index)
         {
             return GetOrClone(layer, (ctx, obj) => VirtualLayer.Clone(ctx, obj, index));

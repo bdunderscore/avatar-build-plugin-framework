@@ -29,20 +29,25 @@ namespace nadena.dev.ndmf.animator
         public int SyncedLayerIndex { get; set; }
 
 
-        public static VirtualLayer Clone(CloneContext context, AnimatorControllerLayer layer, int virtualLayerIndex)
+        public static VirtualLayer Clone(CloneContext context, AnimatorControllerLayer layer, int physicalLayerIndex)
         {
             if (layer == null) return null;
 
-            var clone = new VirtualLayer(context, layer, virtualLayerIndex);
+            var clone = new VirtualLayer(context, layer, physicalLayerIndex);
 
             // TODO: motion, behavior overrides
 
             return clone;
         }
 
-        private VirtualLayer(CloneContext context, AnimatorControllerLayer layer, int virtualLayerIndex)
+        public static VirtualLayer NewLayer(CloneContext context, string name = "(unnamed)")
         {
-            VirtualLayerIndex = virtualLayerIndex;
+            return new VirtualLayer(context, name);
+        }
+
+        private VirtualLayer(CloneContext context, AnimatorControllerLayer layer, int physicalLayerIndex)
+        {
+            VirtualLayerIndex = context.CloneSourceToVirtualLayerIndex(physicalLayerIndex);
             Name = layer.name;
             AvatarMask = layer.avatarMask == null ? null : Object.Instantiate(layer.avatarMask);
             BlendingMode = layer.blendingMode;
@@ -52,6 +57,20 @@ namespace nadena.dev.ndmf.animator
             SyncedLayerIndex = context.CloneSourceToVirtualLayerIndex(layer.syncedLayerIndex);
 
             StateMachine = VirtualStateMachine.Clone(context, layer.stateMachine);
+        }
+
+        private VirtualLayer(CloneContext context, string name)
+        {
+            VirtualLayerIndex = context.AllocateSingleVirtualLayer();
+            Name = name;
+            AvatarMask = null;
+            BlendingMode = AnimatorLayerBlendingMode.Override;
+            DefaultWeight = 1;
+            IKPass = false;
+            SyncedLayerAffectsTiming = false;
+            SyncedLayerIndex = -1;
+
+            StateMachine = new VirtualStateMachine(name);
         }
 
         AnimatorControllerLayer ICommitable<AnimatorControllerLayer>.Prepare(CommitContext context)
@@ -80,6 +99,11 @@ namespace nadena.dev.ndmf.animator
         public void Dispose()
         {
             // no-op
+        }
+
+        public override string ToString()
+        {
+            return $"VirtualLayer[{VirtualLayerIndex}]: {Name}";
         }
     }
 }

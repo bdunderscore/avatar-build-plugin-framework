@@ -51,9 +51,10 @@ namespace nadena.dev.ndmf.animator
             return vsm;
         }
 
-        public VirtualStateMachine()
+        public VirtualStateMachine(string name = "")
         {
             _stateMachine = new AnimatorStateMachine();
+            _stateMachine.name = name;
             AnyStatePosition = _stateMachine.anyStatePosition;
             EntryPosition = _stateMachine.entryPosition;
             ExitPosition = _stateMachine.exitPosition;
