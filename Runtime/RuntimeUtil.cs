@@ -56,7 +56,7 @@ namespace nadena.dev.ndmf.runtime
         [CanBeNull]
         public static string RelativePath(GameObject root, GameObject child)
         {
-            return RelativePath(root.transform, child.transform);
+            return RelativePath(root?.transform, child?.transform);
         }
 
         /// <summary>
