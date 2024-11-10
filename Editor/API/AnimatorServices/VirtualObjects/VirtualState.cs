@@ -149,8 +149,6 @@ namespace nadena.dev.ndmf.animator
         {
             obj.behaviours = Behaviours.ToArray();
             obj.transitions = Transitions.Select(t => (AnimatorStateTransition)context.CommitObject(t)).ToArray();
-
-            _state = null;
         }
         
         void IDisposable.Dispose()
@@ -164,6 +162,11 @@ namespace nadena.dev.ndmf.animator
             
             if (_state != null) Object.DestroyImmediate(_state);
             _state = null;
+        }
+
+        public override string ToString()
+        {
+            return $"VirtualState({Name})";
         }
     }
 }

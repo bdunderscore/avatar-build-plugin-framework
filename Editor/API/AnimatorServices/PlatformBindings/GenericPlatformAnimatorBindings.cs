@@ -10,12 +10,13 @@ namespace nadena.dev.ndmf.animator
             return false;
         }
 
-        public IEnumerable<(object, RuntimeAnimatorController, bool)> GetInnateControllers()
+        public IEnumerable<(object, RuntimeAnimatorController, bool)> GetInnateControllers(GameObject root)
         {
             yield break;
         }
 
-        public void CommitInnateControllers(IEnumerable<(object, RuntimeAnimatorController)> controllers)
+        public void CommitInnateControllers(GameObject root,
+            IDictionary<object, RuntimeAnimatorController> controllers)
         {
             // no-op
         }

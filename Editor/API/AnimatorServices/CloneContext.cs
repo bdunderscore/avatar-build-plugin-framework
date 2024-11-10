@@ -43,7 +43,7 @@ namespace nadena.dev.ndmf.animator
                 if (key == null) return null;
                 if (TryGetValue(key, out U value)) return value;
                 value = clone(this, key);
-                Add(key, value);
+                _clones[key] = value;
                 return value;
             }
             finally

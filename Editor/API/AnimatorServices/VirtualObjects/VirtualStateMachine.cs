@@ -26,24 +26,24 @@ namespace nadena.dev.ndmf.animator
                 vsm.Name = stateMachine.name;
                 vsm.AnyStatePosition = stateMachine.anyStatePosition;
                 vsm.AnyStateTransitions = stateMachine.anyStateTransitions
-                    .Select(t => VirtualStateTransition.Clone(context, t)).ToList();
+                    .Select(context.Clone).ToList();
                 vsm.Behaviours = stateMachine.behaviours.Select(Object.Instantiate).ToList();
-                vsm.DefaultState = VirtualState.Clone(context, stateMachine.defaultState);
+                vsm.DefaultState = context.Clone(stateMachine.defaultState);
                 vsm.EntryPosition = stateMachine.entryPosition;
                 vsm.EntryTransitions = stateMachine.entryTransitions
-                    .Select(t => VirtualTransition.Clone(context, t)).ToList();
+                    .Select(context.Clone).ToList();
                 vsm.ExitPosition = stateMachine.exitPosition;
                 vsm.ParentStateMachinePosition = stateMachine.parentStateMachinePosition;
 
                 vsm.StateMachines = stateMachine.stateMachines.Select(sm => new VirtualChildStateMachine
                 {
-                    State = Clone(context, sm.stateMachine),
+                    State = context.Clone(sm.stateMachine),
                     Position = sm.position
                 }).ToList();
 
                 vsm.States = stateMachine.states.Select(s => new VirtualChildState
                 {
-                    State = VirtualState.Clone(context, s.state),
+                    State = context.Clone(s.state),
                     Position = s.position
                 }).ToList();
             });
@@ -77,12 +77,9 @@ namespace nadena.dev.ndmf.animator
         {
             obj.name = Name;
             obj.anyStatePosition = AnyStatePosition;
-            obj.anyStateTransitions = AnyStateTransitions.Select(t => (AnimatorStateTransition)context.CommitObject(t))
-                .ToArray();
+
             obj.behaviours = Behaviours.ToArray();
-            obj.defaultState = context.CommitObject(DefaultState);
             obj.entryPosition = EntryPosition;
-            obj.entryTransitions = EntryTransitions.Select(t => (AnimatorTransition)context.CommitObject(t)).ToArray();
             obj.exitPosition = ExitPosition;
             obj.parentStateMachinePosition = ParentStateMachinePosition;
             obj.stateMachines = StateMachines.Select(sm => new ChildAnimatorStateMachine
@@ -95,6 +92,14 @@ namespace nadena.dev.ndmf.animator
                 state = context.CommitObject(s.State),
                 position = s.Position
             }).ToArray();
+
+            // Set transitions after registering states/state machines, in case there's some kind of validation happening
+            obj.entryTransitions = EntryTransitions.Select(t => (AnimatorTransition)context.CommitObject(t)).ToArray();
+
+            obj.anyStateTransitions = AnyStateTransitions.Select(t => (AnimatorStateTransition)context.CommitObject(t))
+                .ToArray();
+            // DefaultState will be overwritten if we set it too soon; set it last.
+            obj.defaultState = context.CommitObject(DefaultState);
         }
 
         public string Name { get; set; }

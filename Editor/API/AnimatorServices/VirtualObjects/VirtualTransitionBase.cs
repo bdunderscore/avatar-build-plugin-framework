@@ -22,7 +22,7 @@ namespace nadena.dev.ndmf.animator
                 }
                 else if (cloned.destinationStateMachine != null)
                 {
-                    // SetDestination(context.Clone(cloned.destinationStateMachine));
+                    SetDestination(context.Clone(cloned.destinationStateMachine));
                 }
                 else if (cloned.isExit)
                 {

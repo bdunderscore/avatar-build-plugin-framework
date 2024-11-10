@@ -77,7 +77,7 @@ namespace nadena.dev.ndmf.animator
         {
             var layer = new AnimatorControllerLayer
             {
-                name = Name,
+                name = "VX " + Name,
                 avatarMask = AvatarMask,
                 blendingMode = BlendingMode,
                 defaultWeight = DefaultWeight,

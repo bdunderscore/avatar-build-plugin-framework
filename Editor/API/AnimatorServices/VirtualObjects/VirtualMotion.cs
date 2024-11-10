@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
@@ -16,7 +17,8 @@ namespace nadena.dev.ndmf.animator
         {
             switch (motion)
             {
-                case AnimationClip clip: return Clone(context, motion);
+                case AnimationClip clip: return VirtualClip.Clone(context, clip);
+                case BlendTree tree: return VirtualBlendTree.Clone(context, tree);
                 default: throw new NotImplementedException();
             }
         }

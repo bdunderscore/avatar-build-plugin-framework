@@ -30,9 +30,15 @@ namespace nadena.dev.ndmf.animator
             Layers = new List<VirtualLayer>();
         }
 
-        public static VirtualAnimatorController Clone(CloneContext context, AnimatorController controller)
+        public static VirtualAnimatorController Clone(CloneContext context, RuntimeAnimatorController controller)
         {
-            return new VirtualAnimatorController(context, controller);
+            // TODO: AnimatorOverrideController support
+            if (controller is not AnimatorController)
+            {
+                return null;
+            }
+
+            return new VirtualAnimatorController(context, (AnimatorController)controller);
         }
 
         private VirtualAnimatorController(CloneContext context, AnimatorController controller)
