@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -17,17 +18,47 @@ namespace nadena.dev.ndmf.animator
     ///     - AnimationClip
     ///     - Any state behaviors attached to the animator controller
     /// </summary>
-    public class VirtualAnimatorController : ICommitable<AnimatorController>, IDisposable
+    public class VirtualAnimatorController : VirtualNode, ICommitable<AnimatorController>, IDisposable
     {
         public string Name { get; set; }
-        public Dictionary<string, AnimatorControllerParameter> Parameters { get; }
-        public List<VirtualLayer> Layers { get; set; }
+
+        private ImmutableDictionary<string, AnimatorControllerParameter> _parameters;
+
+        public ImmutableDictionary<string, AnimatorControllerParameter> Parameters
+        {
+            get => _parameters;
+            set => _parameters = I(value ?? throw new ArgumentNullException(nameof(value)));
+        }
+
+        private readonly SortedDictionary<LayerPriority, LayerGroup> _layers = new();
+
+        private struct LayerGroup
+        {
+            public List<VirtualLayer> Layers;
+        }
 
         public VirtualAnimatorController(string name = "")
         {
             Name = name;
-            Parameters = new Dictionary<string, AnimatorControllerParameter>();
-            Layers = new List<VirtualLayer>();
+            Parameters = ImmutableDictionary<string, AnimatorControllerParameter>.Empty;
+        }
+
+        public void AddLayer(LayerPriority priority, VirtualLayer layer)
+        {
+            Invalidate();
+
+            if (!_layers.TryGetValue(priority, out var group))
+            {
+                group = new LayerGroup { Layers = new List<VirtualLayer>() };
+                _layers.Add(priority, group);
+            }
+
+            group.Layers.Add(layer);
+        }
+
+        public IEnumerable<VirtualLayer> Layers
+        {
+            get { return _layers.Values.SelectMany(l => l.Layers); }
         }
 
         public static VirtualAnimatorController Clone(CloneContext context, RuntimeAnimatorController controller)
@@ -44,12 +75,18 @@ namespace nadena.dev.ndmf.animator
         private VirtualAnimatorController(CloneContext context, AnimatorController controller)
         {
             Name = controller.name;
-            Parameters = controller.parameters.ToDictionary(p => p.name);
+            Parameters = controller.parameters.ToImmutableDictionary(p => p.name);
 
             var srcLayers = controller.layers;
             context.AllocateVirtualLayerSpace(srcLayers.Length);
 
-            Layers = srcLayers.Select((l, i) => VirtualLayer.Clone(context, l, i)).ToList();
+            var p0Layers = srcLayers.Select((l, i) => VirtualLayer.Clone(context, l, i)).ToList();
+            foreach (var layer in p0Layers)
+            {
+                layer.IsOriginalLayer = true;
+            }
+
+            _layers[new LayerPriority(0)] = new LayerGroup { Layers = p0Layers };
         }
 
         AnimatorController ICommitable<AnimatorController>.Prepare(CommitContext context)

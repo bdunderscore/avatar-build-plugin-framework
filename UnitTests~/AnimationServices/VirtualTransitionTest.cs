@@ -36,7 +36,11 @@ namespace UnitTests.AnimationServices
             transition = create();
 
             virtualStateTransition = cloneContext.Clone(transition);
+            
+            bool wasInvalidated = false;
+            virtualStateTransition.RegisterCacheObserver(() => { wasInvalidated = true; });
             setupViaVirtualState(virtualStateTransition);
+            Assert.IsTrue(wasInvalidated);
             
             committed = (AnimatorStateTransition) commitContext.CommitObject(virtualStateTransition);
             
@@ -73,7 +77,11 @@ namespace UnitTests.AnimationServices
             transition = create();
 
             virtualStateTransition = cloneContext.Clone(transition);
+            
+            bool wasInvalidated = false;
+            virtualStateTransition.RegisterCacheObserver(() => { wasInvalidated = true; });
             setupViaVirtualState(virtualStateTransition);
+            Assert.IsTrue(wasInvalidated);
             
             committed = (AnimatorTransition) commitContext.CommitObject(virtualStateTransition);
             
@@ -208,7 +216,7 @@ namespace UnitTests.AnimationServices
             AssertPreserveProperty(
                 () => new AnimatorTransition() { conditions = conditions },
                 transition => { },
-                virtualTransition => { },
+                virtualTransition => { virtualTransition.Invalidate(); },
                 transition =>
                 {
                     Assert.AreEqual(1, transition.conditions.Length);

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -10,7 +10,7 @@ namespace nadena.dev.ndmf.animator
     /// <summary>
     ///     Represents a state machine in a virtual layer.
     /// </summary>
-    public class VirtualStateMachine : ICommitable<AnimatorStateMachine>, IDisposable
+    public class VirtualStateMachine : VirtualNode, ICommitable<AnimatorStateMachine>, IDisposable
     {
         private AnimatorStateMachine _stateMachine;
 
@@ -26,12 +26,12 @@ namespace nadena.dev.ndmf.animator
                 vsm.Name = stateMachine.name;
                 vsm.AnyStatePosition = stateMachine.anyStatePosition;
                 vsm.AnyStateTransitions = stateMachine.anyStateTransitions
-                    .Select(context.Clone).ToList();
-                vsm.Behaviours = stateMachine.behaviours.Select(Object.Instantiate).ToList();
+                    .Select(context.Clone).ToImmutableList();
+                vsm.Behaviours = stateMachine.behaviours.Select(Object.Instantiate).ToImmutableList();
                 vsm.DefaultState = context.Clone(stateMachine.defaultState);
                 vsm.EntryPosition = stateMachine.entryPosition;
                 vsm.EntryTransitions = stateMachine.entryTransitions
-                    .Select(context.Clone).ToList();
+                    .Select(context.Clone).ToImmutableList();
                 vsm.ExitPosition = stateMachine.exitPosition;
                 vsm.ParentStateMachinePosition = stateMachine.parentStateMachinePosition;
 
@@ -39,13 +39,13 @@ namespace nadena.dev.ndmf.animator
                 {
                     State = context.Clone(sm.stateMachine),
                     Position = sm.position
-                }).ToList();
+                }).ToImmutableList();
 
                 vsm.States = stateMachine.states.Select(s => new VirtualChildState
                 {
                     State = context.Clone(s.state),
                     Position = s.position
-                }).ToList();
+                }).ToImmutableList();
             });
 
             return vsm;
@@ -59,11 +59,11 @@ namespace nadena.dev.ndmf.animator
             EntryPosition = _stateMachine.entryPosition;
             ExitPosition = _stateMachine.exitPosition;
 
-            EntryTransitions = new List<VirtualTransition>();
-            AnyStateTransitions = new List<VirtualStateTransition>();
-            Behaviours = new List<StateMachineBehaviour>();
-            StateMachines = new List<VirtualChildStateMachine>();
-            States = new List<VirtualChildState>();
+            EntryTransitions = ImmutableList<VirtualTransition>.Empty;
+            AnyStateTransitions = ImmutableList<VirtualStateTransition>.Empty;
+            Behaviours = ImmutableList<StateMachineBehaviour>.Empty;
+            StateMachines = ImmutableList<VirtualChildStateMachine>.Empty;
+            States = ImmutableList<VirtualChildState>.Empty;
         }
         
         AnimatorStateMachine ICommitable<AnimatorStateMachine>.Prepare(CommitContext context)
@@ -102,19 +102,93 @@ namespace nadena.dev.ndmf.animator
             obj.defaultState = context.CommitObject(DefaultState);
         }
 
-        public string Name { get; set; }
-        public Vector3 AnyStatePosition { get; set; }
-        public Vector3 EntryPosition { get; set; }
-        public Vector3 ExitPosition { get; set; }
-        public Vector3 ParentStateMachinePosition { get; set; }
+        private string _name;
 
-        public List<VirtualTransition> EntryTransitions { get; set; }
-        public List<VirtualStateTransition> AnyStateTransitions { get; set; }
-        public List<StateMachineBehaviour> Behaviours { get; set; }
+        public string Name
+        {
+            get => _name;
+            set => _name = I(value);
+        }
 
-        public List<VirtualChildStateMachine> StateMachines { get; set; }
-        public List<VirtualChildState> States { get; set; }
-        public VirtualState DefaultState { get; set; }
+        private Vector3 _anyStatePosition;
+
+        public Vector3 AnyStatePosition
+        {
+            get => _anyStatePosition;
+            set => _anyStatePosition = I(value);
+        }
+
+        private Vector3 _entryPosition;
+
+        public Vector3 EntryPosition
+        {
+            get => _entryPosition;
+            set => _entryPosition = I(value);
+        }
+
+        private Vector3 _exitPosition;
+
+        public Vector3 ExitPosition
+        {
+            get => _exitPosition;
+            set => _exitPosition = I(value);
+        }
+
+        private Vector3 _parentStateMachinePosition;
+
+        public Vector3 ParentStateMachinePosition
+        {
+            get => _parentStateMachinePosition;
+            set => _parentStateMachinePosition = I(value);
+        }
+
+        private ImmutableList<VirtualTransition> _entryTransitions;
+
+        public ImmutableList<VirtualTransition> EntryTransitions
+        {
+            get => _entryTransitions;
+            set => _entryTransitions = I(value);
+        }
+
+        private ImmutableList<VirtualStateTransition> _anyStateTransitions;
+
+        public ImmutableList<VirtualStateTransition> AnyStateTransitions
+        {
+            get => _anyStateTransitions;
+            set => _anyStateTransitions = I(value);
+        }
+
+        private ImmutableList<StateMachineBehaviour> _behaviours;
+
+        public ImmutableList<StateMachineBehaviour> Behaviours
+        {
+            get => _behaviours;
+            set => _behaviours = I(value);
+        }
+
+        private ImmutableList<VirtualChildStateMachine> _stateMachines;
+
+        public ImmutableList<VirtualChildStateMachine> StateMachines
+        {
+            get => _stateMachines;
+            set => _stateMachines = I(value);
+        }
+
+        private ImmutableList<VirtualChildState> _states;
+
+        public ImmutableList<VirtualChildState> States
+        {
+            get => _states;
+            set => _states = I(value);
+        }
+
+        private VirtualState _defaultState;
+
+        public VirtualState DefaultState
+        {
+            get => _defaultState;
+            set => _defaultState = I(value);
+        }
 
         public struct VirtualChildStateMachine
         {

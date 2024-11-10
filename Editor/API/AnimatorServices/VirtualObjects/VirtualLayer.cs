@@ -8,7 +8,7 @@ namespace nadena.dev.ndmf.animator
     /// <summary>
     ///     A layer within a VirtualAnimatorController
     /// </summary>
-    public class VirtualLayer : ICommitable<AnimatorControllerLayer>, IDisposable
+    public class VirtualLayer : VirtualNode, ICommitable<AnimatorControllerLayer>, IDisposable
     {
         /// <summary>
         ///     Returns a "virtual layer index" which can be used to map to the actual layer index in the animator controller,
@@ -16,18 +16,78 @@ namespace nadena.dev.ndmf.animator
         /// </summary>
         public int VirtualLayerIndex { get; }
 
-        public VirtualStateMachine StateMachine { get; set; }
 
-        public AvatarMask AvatarMask { get; set; }
-        public AnimatorLayerBlendingMode BlendingMode { get; set; }
-        public float DefaultWeight { get; set; }
-        public bool IKPass { get; set; }
+        private VirtualStateMachine _stateMachine;
 
-        public string Name { get; set; }
+        public VirtualStateMachine StateMachine
+        {
+            get => _stateMachine;
+            set => _stateMachine = I(value);
+        }
 
-        public bool SyncedLayerAffectsTiming { get; set; }
-        public int SyncedLayerIndex { get; set; }
+        private AvatarMask _avatarMask;
 
+        public AvatarMask AvatarMask
+        {
+            get => _avatarMask;
+            set => _avatarMask = I(value);
+        }
+
+        private AnimatorLayerBlendingMode _blendingMode;
+
+        public AnimatorLayerBlendingMode BlendingMode
+        {
+            get => _blendingMode;
+            set => _blendingMode = I(value);
+        }
+
+        private float _defaultWeight;
+
+        public float DefaultWeight
+        {
+            get => _defaultWeight;
+            set => _defaultWeight = I(value);
+        }
+
+        private bool _ikPass;
+
+        public bool IKPass
+        {
+            get => _ikPass;
+            set => _ikPass = I(value);
+        }
+
+        private string _name;
+
+        public string Name
+        {
+            get => _name;
+            set => _name = I(value);
+        }
+
+        private bool _syncedLayerAffectsTiming;
+
+        public bool SyncedLayerAffectsTiming
+        {
+            get => _syncedLayerAffectsTiming;
+            set => _syncedLayerAffectsTiming = I(value);
+        }
+
+        private int _syncedLayerIndex;
+
+        public int SyncedLayerIndex
+        {
+            get => _syncedLayerIndex;
+            set => _syncedLayerIndex = I(value);
+        }
+
+        private bool _isOriginalLayer;
+
+        public bool IsOriginalLayer
+        {
+            get => _isOriginalLayer;
+            set => _isOriginalLayer = I(value);
+        }
 
         public static VirtualLayer Clone(CloneContext context, AnimatorControllerLayer layer, int physicalLayerIndex)
         {

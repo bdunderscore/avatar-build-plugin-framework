@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -40,7 +40,7 @@ namespace nadena.dev.ndmf.animator
                         Position = m.position,
                         TimeScale = m.timeScale
                     };
-                }).ToList();
+                }).ToImmutableList();
             });
         }
 
@@ -62,46 +62,52 @@ namespace nadena.dev.ndmf.animator
         public string Name
         {
             get => _tree.name;
-            set => _tree.name = value;
+            set => _tree.name = I(value);
         }
 
         public string BlendParameter
         {
             get => _tree.blendParameter;
-            set => _tree.blendParameter = value;
+            set => _tree.blendParameter = I(value);
         }
 
         public string BlendParameterY
         {
             get => _tree.blendParameterY;
-            set => _tree.blendParameterY = value;
+            set => _tree.blendParameterY = I(value);
         }
 
         public BlendTreeType BlendType
         {
             get => _tree.blendType;
-            set => _tree.blendType = value;
+            set => _tree.blendType = I(value);
         }
 
         public float MaxThreshold
         {
             get => _tree.maxThreshold;
-            set => _tree.maxThreshold = value;
+            set => _tree.maxThreshold = I(value);
         }
 
         public float MinThreshold
         {
             get => _tree.minThreshold;
-            set => _tree.minThreshold = value;
+            set => _tree.minThreshold = I(value);
         }
 
         public bool UseAutomaticThresholds
         {
             get => _tree.useAutomaticThresholds;
-            set => _tree.useAutomaticThresholds = value;
+            set => _tree.useAutomaticThresholds = I(value);
         }
 
-        public List<VirtualChildMotion> Children { get; set; }
+        private ImmutableList<VirtualChildMotion> _children;
+
+        public ImmutableList<VirtualChildMotion> Children
+        {
+            get => _children;
+            set => _children = I(value);
+        }
 
         protected override Motion Prepare(object context)
         {

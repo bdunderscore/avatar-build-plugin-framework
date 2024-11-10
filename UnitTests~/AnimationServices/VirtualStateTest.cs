@@ -35,7 +35,10 @@ namespace UnitTests.AnimationServices
             state = new AnimatorState();
 
             virtualState = cloneContext.Clone(state);
+            bool wasInvalidated = false;
+            virtualState.RegisterCacheObserver(() => { wasInvalidated = true; });
             setupViaVirtualState(virtualState);
+            Assert.IsTrue(wasInvalidated);
             
             committed = commitContext.CommitObject(virtualState);
             

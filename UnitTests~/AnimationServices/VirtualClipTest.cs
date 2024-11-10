@@ -81,8 +81,11 @@ namespace UnitTests.AnimationServices
             
             // Replace the curve and see if it commits
             var newCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 2));
-            vc.SetFloatCurve("abc", typeof(GameObject), "m_IsActive", newCurve);
-            
+            using (new AssertInvalidate(vc))
+            {
+                vc.SetFloatCurve("abc", typeof(GameObject), "m_IsActive", newCurve);
+            }
+
             var committedClip = Commit(vc);
             var newCommittedCurve = AnimationUtility.GetEditorCurve(committedClip, bindings[0]);
             AssertEqualNotSame(newCommittedCurve, newCurve);
@@ -96,9 +99,17 @@ namespace UnitTests.AnimationServices
             ac.SetCurve("abc", typeof(GameObject), "m_IsActive", new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1)));
             
             VirtualClip vc = VirtualClip.Clone(context, ac);
-            vc.SetFloatCurve("abc", typeof(GameObject), "m_IsActive", null);
-            vc.SetFloatCurve("def", typeof(GameObject), "m_IsActive", new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1)));
-            
+            using (new AssertInvalidate(vc))
+            {
+                vc.SetFloatCurve("abc", typeof(GameObject), "m_IsActive", null);
+            }
+
+            using (new AssertInvalidate(vc))
+            {
+                vc.SetFloatCurve("def", typeof(GameObject), "m_IsActive",
+                    new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1)));
+            }
+
             Assert.AreEqual(vc.GetFloatCurveBindings().Count(), 1);
             
             var committedClip = Commit(vc);
@@ -125,11 +136,15 @@ namespace UnitTests.AnimationServices
             });
             
             VirtualClip vc = VirtualClip.Clone(context, ac);
-            vc.SetObjectCurve("abc", typeof(MeshRenderer), "m_Materials.Array.data[0]", new ObjectReferenceKeyframe[]
+            using (new AssertInvalidate(vc))
             {
-                new() {time = 0, value = m2},
-            });
-            
+                vc.SetObjectCurve("abc", typeof(MeshRenderer), "m_Materials.Array.data[0]",
+                    new ObjectReferenceKeyframe[]
+                    {
+                        new() { time = 0, value = m2 },
+                    });
+            }
+
             var committedClip = Commit(vc);
             var newCommittedCurve = AnimationUtility.GetObjectReferenceCurve(committedClip, new EditorCurveBinding()
             {
@@ -177,11 +192,15 @@ namespace UnitTests.AnimationServices
             
             VirtualClip vc = VirtualClip.Clone(context, ac);
             vc.SetObjectCurve("abc", typeof(MeshRenderer), "m_Materials.Array.data[0]", null);
-            vc.SetObjectCurve("def", typeof(MeshRenderer), "m_Materials.Array.data[0]", new ObjectReferenceKeyframe[]
+            using (new AssertInvalidate(vc))
             {
-                new() {time = 0, value = m1},
-            });
-            
+                vc.SetObjectCurve("def", typeof(MeshRenderer), "m_Materials.Array.data[0]",
+                    new ObjectReferenceKeyframe[]
+                    {
+                        new() { time = 0, value = m1 },
+                    });
+            }
+
             Assert.AreEqual(1, vc.GetObjectCurveBindings().Count());
             
             var committedClip = Commit(vc);
@@ -209,8 +228,11 @@ namespace UnitTests.AnimationServices
             });
             
             VirtualClip vc = VirtualClip.Clone(context, ac);
-            vc.EditPaths(s => s.ToUpperInvariant());
-            
+            using (new AssertInvalidate(vc))
+            {
+                vc.EditPaths(s => s.ToUpperInvariant());
+            }
+
             Assert.AreEqual(new[] { "ABC", "DEF", "X" }, vc.GetFloatCurveBindings().Select(b => b.path).OrderBy(b => b).ToArray());
             Assert.AreEqual(new[] { "FOO" }, vc.GetObjectCurveBindings().Select(b => b.path).OrderBy(b => b).ToArray());
             

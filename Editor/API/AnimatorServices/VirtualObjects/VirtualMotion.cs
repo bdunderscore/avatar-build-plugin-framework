@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
 {
-    public abstract class VirtualMotion : ICommitable<Motion>, IDisposable
+    public abstract class VirtualMotion : VirtualNode, ICommitable<Motion>, IDisposable
     {
         internal VirtualMotion()
         {

@@ -31,8 +31,11 @@ namespace UnitTests.AnimationServices
             tree = new BlendTree();
 
             virtTree = (VirtualBlendTree) cloneContext.Clone(tree);
-            setupViaVirtualState(virtTree);
-            
+            using (new AssertInvalidate(virtTree))
+            {
+                setupViaVirtualState(virtTree);
+            }
+
             committed = (BlendTree) commitContext.CommitObject(virtTree);
             
             assert(committed);
@@ -146,7 +149,7 @@ namespace UnitTests.AnimationServices
             var virtTree = (VirtualBlendTree) cloneContext.Clone(tree);
             Assert.AreEqual(2, virtTree.Children.Count);
             
-            virtTree.Children.Add(new VirtualBlendTree.VirtualChildMotion()
+            virtTree.Children = virtTree.Children.Add(new VirtualBlendTree.VirtualChildMotion()
             {
                 Motion = VirtualClip.Create("3")
             });

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEditor;
@@ -9,7 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class VirtualState : ICommitable<AnimatorState>, IDisposable
+    public class VirtualState : VirtualNode, ICommitable<AnimatorState>, IDisposable
     {
         private AnimatorState _state;
 
@@ -37,22 +38,28 @@ namespace nadena.dev.ndmf.animator
 
             // TODO: Should we rewrite any internal properties of these StateMachineBehaviours?
             Behaviours = _state.behaviours.Select(b => Object.Instantiate(b)).ToList();
-            context.DeferCall(() => { Transitions = _state.transitions.Select(context.Clone).ToList(); });
+            context.DeferCall(() => { Transitions = _state.transitions.Select(context.Clone).ToImmutableList(); });
             Motion = context.Clone(_state.motion);
         }
 
-        public VirtualMotion Motion { get; set; }
+        private VirtualMotion _motion;
+
+        public VirtualMotion Motion
+        {
+            get => _motion;
+            set => _motion = I(value);
+        }
 
         public string Name
         {
             get => _state.name;
-            set => _state.name = value;
+            set => _state.name = I(value);
         }
         
         public float CycleOffset
         {
             get => _state.cycleOffset;
-            set => _state.cycleOffset = value;
+            set => _state.cycleOffset = I(value);
         }
 
         [CanBeNull]
@@ -61,6 +68,7 @@ namespace nadena.dev.ndmf.animator
             get => _state.cycleOffsetParameterActive ? _state.cycleOffsetParameter : null;
             set
             {
+                Invalidate();
                 _state.cycleOffsetParameterActive = value != null;
                 _state.cycleOffsetParameter = value ?? "";
             }
@@ -69,13 +77,13 @@ namespace nadena.dev.ndmf.animator
         public bool IKOnFeet
         {
             get => _state.iKOnFeet;
-            set => _state.iKOnFeet = value;
+            set => _state.iKOnFeet = I(value);
         }
 
         public bool Mirror
         {
             get => _state.mirror;
-            set => _state.mirror = value;
+            set => _state.mirror = I(value);
         }
 
         [CanBeNull]
@@ -84,6 +92,7 @@ namespace nadena.dev.ndmf.animator
             get => _state.mirrorParameterActive ? _state.mirrorParameter : null;
             set
             {
+                Invalidate();
                 _state.mirrorParameterActive = value != null;
                 _state.mirrorParameter = value ?? "";
             }
@@ -94,7 +103,7 @@ namespace nadena.dev.ndmf.animator
         public float Speed
         {
             get => _state.speed;
-            set => _state.speed = value;
+            set => _state.speed = I(value);
         }
 
         [CanBeNull]
@@ -103,6 +112,7 @@ namespace nadena.dev.ndmf.animator
             get => _state.speedParameterActive ? _state.speedParameter : null;
             set
             {
+                Invalidate();
                 _state.speedParameterActive = value != null;
                 _state.speedParameter = value ?? "";
             }
@@ -111,7 +121,7 @@ namespace nadena.dev.ndmf.animator
         public string Tag
         {
             get => _state.tag;
-            set => _state.tag = value;
+            set => _state.tag = I(value);
         }
 
         [CanBeNull]
@@ -120,17 +130,24 @@ namespace nadena.dev.ndmf.animator
             get => _state.timeParameterActive ? _state.timeParameter : null;
             set
             {
+                Invalidate();
                 _state.timeParameterActive = value != null;
                 _state.timeParameter = value ?? "";
             }
         }
 
-        public List<VirtualStateTransition> Transitions { get; set; }
+        private ImmutableList<VirtualStateTransition> _transitions;
+
+        public ImmutableList<VirtualStateTransition> Transitions
+        {
+            get => _transitions;
+            set => _transitions = I(value);
+        }
 
         public bool WriteDefaultValues
         {
             get => _state.writeDefaultValues;
-            set => _state.writeDefaultValues = value;
+            set => _state.writeDefaultValues = I(value);
         }
 
         // Helpers

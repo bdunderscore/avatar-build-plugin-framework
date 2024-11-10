@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using UnityEditor.Animations;
 using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class VirtualTransitionBase : ICommitable<AnimatorTransitionBase>, IDisposable
+    public class VirtualTransitionBase : VirtualNode, ICommitable<AnimatorTransitionBase>, IDisposable
     {
         private AnimatorTransitionBase _transition;
-        private List<AnimatorCondition> _conditions;
+        private ImmutableList<AnimatorCondition> _conditions;
 
         internal VirtualTransitionBase(CloneContext context, AnimatorTransitionBase cloned)
         {
@@ -34,37 +34,59 @@ namespace nadena.dev.ndmf.animator
         public string Name
         {
             get => _transition.name;
-            set => _transition.name = value;
+            set => _transition.name = I(value);
         }
 
-        public List<AnimatorCondition> Conditions
+        public ImmutableList<AnimatorCondition> Conditions
         {
             get
             {
-                _conditions ??= new List<AnimatorCondition>(_transition.conditions);
+                _conditions ??= _transition.conditions.ToImmutableList();
                 return _conditions;
             }
             set
             {
                 if (value == null) throw new ArgumentNullException(nameof(value));
+                Invalidate();
                 _conditions = value;
             }
         }
 
-        public VirtualState DestinationState { get; private set; }
-        public VirtualStateMachine DestinationStateMachine { get; private set; }
+        private VirtualState _destinationState;
+
+        public VirtualState DestinationState
+        {
+            get => _destinationState;
+            private set
+            {
+                _destinationState = value;
+                Invalidate();
+            }
+        }
+
+        private VirtualStateMachine _destinationStateMachine;
+
+        public VirtualStateMachine DestinationStateMachine
+        {
+            get => _destinationStateMachine;
+            private set
+            {
+                _destinationStateMachine = value;
+                Invalidate();
+            }
+        }
         public bool IsExit => _transition.isExit;
 
         public bool Mute
         {
             get => _transition.mute;
-            set => _transition.mute = value;
+            set => _transition.mute = I(value);
         }
 
         public bool Solo
         {
             get => _transition.solo;
-            set => _transition.solo = value;
+            set => _transition.solo = I(value);
         }
 
         protected static VirtualTransitionBase CloneInternal(
@@ -88,6 +110,7 @@ namespace nadena.dev.ndmf.animator
 
         public void SetDestination(VirtualState state)
         {
+            Invalidate();
             DestinationState = state;
             DestinationStateMachine = null;
             _transition.isExit = false;
@@ -95,6 +118,7 @@ namespace nadena.dev.ndmf.animator
 
         public void SetDestination(VirtualStateMachine stateMachine)
         {
+            Invalidate();
             DestinationState = null;
             DestinationStateMachine = stateMachine;
             _transition.isExit = false;
@@ -102,6 +126,7 @@ namespace nadena.dev.ndmf.animator
 
         public void SetExitDestination()
         {
+            Invalidate();
             DestinationState = null;
             DestinationStateMachine = null;
             _transition.isExit = true;

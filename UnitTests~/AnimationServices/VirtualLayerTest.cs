@@ -30,8 +30,11 @@ namespace UnitTests.AnimationServices
             layer = new AnimatorControllerLayer();
 
             virtVal = cloneContext.Clone(layer, 0);
-            setupViaVirtualState(virtVal);
-            
+            using (new AssertInvalidate(virtVal))
+            {
+                setupViaVirtualState(virtVal);
+            }
+
             committed = commitContext.CommitObject(virtVal);
             
             assert(committed);

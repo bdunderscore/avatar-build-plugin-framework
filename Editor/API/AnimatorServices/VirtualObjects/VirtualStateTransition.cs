@@ -23,13 +23,13 @@ namespace nadena.dev.ndmf.animator
         public bool CanTransitionToSelf
         {
             get => _stateTransition.canTransitionToSelf;
-            set => _stateTransition.canTransitionToSelf = value;
+            set => _stateTransition.canTransitionToSelf = I(value);
         }
 
         public float Duration
         {
             get => _stateTransition.duration;
-            set => _stateTransition.duration = value;
+            set => _stateTransition.duration = I(value);
         }
 
         public float? ExitTime
@@ -37,6 +37,7 @@ namespace nadena.dev.ndmf.animator
             get => _stateTransition.hasExitTime ? _stateTransition.exitTime : null;
             set
             {
+                Invalidate();
                 _stateTransition.hasExitTime = value.HasValue;
                 _stateTransition.exitTime = value ?? 0;
             }
@@ -45,25 +46,25 @@ namespace nadena.dev.ndmf.animator
         public bool HasFixedDuration
         {
             get => _stateTransition.hasFixedDuration;
-            set => _stateTransition.hasFixedDuration = value;
+            set => _stateTransition.hasFixedDuration = I(value);
         }
 
         public TransitionInterruptionSource InterruptionSource
         {
             get => _stateTransition.interruptionSource;
-            set => _stateTransition.interruptionSource = value;
+            set => _stateTransition.interruptionSource = I(value);
         }
 
         public float Offset
         {
             get => _stateTransition.offset;
-            set => _stateTransition.offset = value;
+            set => _stateTransition.offset = I(value);
         }
 
         public bool OrderedInterruption
         {
             get => _stateTransition.orderedInterruption;
-            set => _stateTransition.orderedInterruption = value;
+            set => _stateTransition.orderedInterruption = I(value);
         }
     }
 }

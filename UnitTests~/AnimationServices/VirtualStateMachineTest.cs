@@ -34,8 +34,11 @@ namespace UnitTests.AnimationServices
             state = new AnimatorStateMachine();
 
             virtualState = cloneContext.Clone(state);
-            setupViaVirtualState(virtualState);
-            
+            using (new AssertInvalidate(virtualState))
+            {
+                setupViaVirtualState(virtualState);
+            }
+
             committed = commitContext.CommitObject(virtualState);
             
             assert(committed);

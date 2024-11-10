@@ -22,12 +22,16 @@ namespace UnitTests.AnimationServices
             Assert.AreEqual(2, virtualController.Parameters.Count);
             Assert.AreEqual(AnimatorControllerParameterType.Float, virtualController.Parameters["x"].type);
             Assert.AreEqual(AnimatorControllerParameterType.Bool, virtualController.Parameters["y"].type);
-            virtualController.Parameters["z"] = new AnimatorControllerParameter()
+
+            using (new AssertInvalidate(virtualController))
             {
-                name = "ignored",
-                type = AnimatorControllerParameterType.Trigger
-            };
-            
+                virtualController.Parameters = virtualController.Parameters.Add("z", new AnimatorControllerParameter()
+                {
+                    name = "ignored",
+                    type = AnimatorControllerParameterType.Trigger
+                });
+            }
+
             var commitContext = new CommitContext();
             var committed = commitContext.CommitObject(virtualController);
             
@@ -79,8 +83,11 @@ namespace UnitTests.AnimationServices
             
             var vc1 = context.Clone(ac1);
             var vc2 = context.Clone(ac2);
-            
-            vc1.Layers.AddRange(vc2.Layers);
+
+            foreach (var l in vc2.Layers)
+            {
+                using (new AssertInvalidate(vc1)) vc1.AddLayer(new LayerPriority(), l);
+            }
             
             var commitContext = new CommitContext();
             var committed = commitContext.CommitObject(vc1);

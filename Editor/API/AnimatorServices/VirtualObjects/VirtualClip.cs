@@ -20,7 +20,7 @@ namespace nadena.dev.ndmf.animator
         public string Name
         {
             get => _clip.name;
-            set => _clip.name = value;
+            set => _clip.name = I(value);
         }
 
         /// <summary>
@@ -34,10 +34,15 @@ namespace nadena.dev.ndmf.animator
         /// </summary>
         public bool IsDirty { get; private set; }
 
+        private bool _useHighQualityCurves;
         /// <summary>
         ///     Controls the (unexposed) High Quality Curve setting on the animation clip.
         /// </summary>
-        public bool UseHighQualityCurves { get; set; }
+        public bool UseHighQualityCurves
+        {
+            get => _useHighQualityCurves;
+            set => _useHighQualityCurves = I(value);
+        }
 
         /// <summary>
         ///     Controls the `legacy` setting on the animation clip.
@@ -45,13 +50,13 @@ namespace nadena.dev.ndmf.animator
         public bool Legacy
         {
             get => _clip.legacy;
-            set => _clip.legacy = value;
+            set => _clip.legacy = I(value);
         }
 
         public Bounds LocalBounds
         {
             get => _clip.localBounds;
-            set => _clip.localBounds = value;
+            set => _clip.localBounds = I(value);
         }
 
         public AnimationClipSettings Settings
@@ -69,15 +74,21 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        public VirtualMotion AdditiveReferencePoseClip { get; set; }
+        private VirtualMotion _additiveReferencePoseClip;
 
+        public VirtualMotion AdditiveReferencePoseClip
+        {
+            get => _additiveReferencePoseClip;
+            set => _additiveReferencePoseClip = I(value);
+        }
+        
         public float AdditiveReferencePoseTime
         {
             get => Settings.additiveReferencePoseTime;
             set
             {
                 var settings = Settings;
-                settings.additiveReferencePoseTime = value;
+                settings.additiveReferencePoseTime = I(value);
                 Settings = settings;
             }
         }
@@ -85,13 +96,13 @@ namespace nadena.dev.ndmf.animator
         public WrapMode WrapMode
         {
             get => _clip.wrapMode;
-            set => _clip.wrapMode = value;
+            set => _clip.wrapMode = I(value);
         }
 
         public float FrameRate
         {
             get => _clip.frameRate;
-            set => _clip.frameRate = value;
+            set => _clip.frameRate = I(value);
         }
 
         private Dictionary<EditorCurveBinding, CachedCurve<AnimationCurve>> _curveCache = new(ECBComparator.Instance);
@@ -260,6 +271,7 @@ namespace nadena.dev.ndmf.animator
                     }
 
                     IsDirty = true;
+                    Invalidate();
 
                     // Any binding originally present needs some kind of presence in the new cache; start off by
                     // inserting a deleted entry, we'll overwrite it later if appropriate.
@@ -329,6 +341,8 @@ namespace nadena.dev.ndmf.animator
 
             if (IsMarkerClip) return;
 
+            Invalidate();
+
             if (!_curveCache.TryGetValue(binding, out var cached))
             {
                 cached = new CachedCurve<AnimationCurve>();
@@ -350,6 +364,8 @@ namespace nadena.dev.ndmf.animator
 
             if (IsMarkerClip) return;
 
+            Invalidate();
+            
             if (!_pptrCurveCache.TryGetValue(binding, out var cached))
             {
                 cached = new CachedCurve<ObjectReferenceKeyframe[]>();
