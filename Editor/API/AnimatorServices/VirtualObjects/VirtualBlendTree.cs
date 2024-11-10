@@ -19,7 +19,7 @@ namespace nadena.dev.ndmf.animator
             public bool Mirror;
             public float Threshold;
             public Vector2 Position;
-            public float TimeScale;
+            public float TimeScale = 1.0f;
         }
 
         private VirtualBlendTree(CloneContext context, BlendTree cloned)

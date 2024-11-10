@@ -149,6 +149,7 @@ namespace nadena.dev.ndmf.animator
             }
 
             var newClip = Object.Instantiate(clip);
+            newClip.name = clip.name;
             
             var virtualClip = new VirtualClip(newClip, false);
             

@@ -86,7 +86,7 @@ namespace UnitTests.AnimationServices
             var committedClip = Commit(vc);
             var newCommittedCurve = AnimationUtility.GetEditorCurve(committedClip, bindings[0]);
             AssertEqualNotSame(newCommittedCurve, newCurve);
-            Assert.AreEqual(committedClip.name, ac.name);
+            Assert.AreEqual(ac.name, committedClip.name);
         }
 
         [Test]
