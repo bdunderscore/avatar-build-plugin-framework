@@ -116,7 +116,7 @@ namespace UnitTests.AnimationServices
         {
             AssertPreserveProperty(
                 state => state.stateMachine = TrackObject(new AnimatorStateMachine() { name = "x" }),
-                state => state.StateMachine = new VirtualStateMachine() { Name = "x" },
+                state => state.StateMachine = VirtualStateMachine.Create(new CloneContext(new GenericPlatformAnimatorBindings()), "x"),
                 state => Assert.AreEqual("x", state.stateMachine.name),
                 state => Assert.AreEqual("x", state.StateMachine.Name)
             );

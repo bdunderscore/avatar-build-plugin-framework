@@ -20,6 +20,7 @@ namespace nadena.dev.ndmf.animator
     /// </summary>
     public class VirtualAnimatorController : VirtualNode, ICommitable<AnimatorController>, IDisposable
     {
+        private readonly CloneContext _context;
         public string Name { get; set; }
 
         private ImmutableDictionary<string, AnimatorControllerParameter> _parameters;
@@ -37,8 +38,9 @@ namespace nadena.dev.ndmf.animator
             public List<VirtualLayer> Layers;
         }
 
-        public VirtualAnimatorController(string name = "")
+        public VirtualAnimatorController(CloneContext context, string name = "")
         {
+            _context = context;
             Name = name;
             Parameters = ImmutableDictionary<string, AnimatorControllerParameter>.Empty;
         }
@@ -54,6 +56,16 @@ namespace nadena.dev.ndmf.animator
             }
 
             group.Layers.Add(layer);
+        }
+
+        public VirtualLayer AddLayer(LayerPriority priority, string name)
+        {
+            // implicitly creates state machine
+            var layer = VirtualLayer.Create(_context, name);
+
+            AddLayer(priority, layer);
+
+            return layer;
         }
 
         public IEnumerable<VirtualLayer> Layers

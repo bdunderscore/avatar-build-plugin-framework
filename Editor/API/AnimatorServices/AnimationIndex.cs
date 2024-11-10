@@ -167,8 +167,8 @@ namespace nadena.dev.ndmf.animator
             while (queue.Count > 0)
             {
                 var node = queue.Dequeue();
-
                 node.RegisterCacheObserver(_invalidateAction);
+                
                 if (!visited.Add(node))
                 {
                     continue;

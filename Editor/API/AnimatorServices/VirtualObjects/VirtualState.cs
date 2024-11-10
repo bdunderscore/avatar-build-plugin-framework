@@ -14,7 +14,13 @@ namespace nadena.dev.ndmf.animator
     {
         private AnimatorState _state;
 
-        public List<StateMachineBehaviour> Behaviours { get; set; }
+        private ImmutableList<StateMachineBehaviour> _behaviours;
+
+        public ImmutableList<StateMachineBehaviour> Behaviours
+        {
+            get => _behaviours;
+            set => _behaviours = I(value);
+        }
 
         public static VirtualState Clone(
             CloneContext context,
@@ -32,12 +38,24 @@ namespace nadena.dev.ndmf.animator
             return new VirtualState(context, clonedState);
         }
 
+        public static VirtualState Create(CloneContext _, string name = "unnamed")
+        {
+            return new VirtualState { Name = name };
+        }
+
+        private VirtualState()
+        {
+            _state = new AnimatorState();
+            Behaviours = ImmutableList<StateMachineBehaviour>.Empty;
+            Transitions = ImmutableList<VirtualStateTransition>.Empty;
+        }
+
         private VirtualState(CloneContext context, AnimatorState clonedState)
         {
             _state = clonedState;
 
             // TODO: Should we rewrite any internal properties of these StateMachineBehaviours?
-            Behaviours = _state.behaviours.Select(b => Object.Instantiate(b)).ToList();
+            Behaviours = _state.behaviours.Select(b => Object.Instantiate(b)).ToImmutableList();
             context.DeferCall(() => { Transitions = _state.transitions.Select(context.Clone).ToImmutableList(); });
             Motion = context.Clone(_state.motion);
         }

@@ -101,7 +101,7 @@ namespace nadena.dev.ndmf.animator
             return clone;
         }
 
-        public static VirtualLayer NewLayer(CloneContext context, string name = "(unnamed)")
+        public static VirtualLayer Create(CloneContext context, string name = "(unnamed)")
         {
             return new VirtualLayer(context, name);
         }
@@ -131,7 +131,7 @@ namespace nadena.dev.ndmf.animator
             SyncedLayerAffectsTiming = false;
             SyncedLayerIndex = -1;
 
-            StateMachine = new VirtualStateMachine(name);
+            StateMachine = VirtualStateMachine.Create(context, name);
         }
 
         AnimatorControllerLayer ICommitable<AnimatorControllerLayer>.Prepare(CommitContext context)

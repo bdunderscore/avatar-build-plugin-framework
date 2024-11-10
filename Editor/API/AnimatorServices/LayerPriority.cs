@@ -4,6 +4,8 @@ namespace nadena.dev.ndmf.animator
 {
     public struct LayerPriority : IComparable<LayerPriority>
     {
+        public static LayerPriority Default = new();
+        
         internal int Priority;
 
         public LayerPriority(int priority)
