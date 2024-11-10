@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -164,6 +165,11 @@ namespace nadena.dev.ndmf.animator
         public override string ToString()
         {
             return $"VirtualLayer[{VirtualLayerIndex}]: {Name}";
+        }
+
+        protected override IEnumerable<VirtualNode> _EnumerateChildren()
+        {
+            yield return StateMachine;
         }
     }
 }

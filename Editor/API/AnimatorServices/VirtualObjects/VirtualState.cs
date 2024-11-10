@@ -185,5 +185,11 @@ namespace nadena.dev.ndmf.animator
         {
             return $"VirtualState({Name})";
         }
+
+        protected override IEnumerable<VirtualNode> _EnumerateChildren()
+        {
+            if (Motion != null) yield return Motion;
+            foreach (var transition in Transitions) yield return transition;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor.Animations;
@@ -37,7 +38,7 @@ namespace nadena.dev.ndmf.animator
 
                 vsm.StateMachines = stateMachine.stateMachines.Select(sm => new VirtualChildStateMachine
                 {
-                    State = context.Clone(sm.stateMachine),
+                    StateMachine = context.Clone(sm.stateMachine),
                     Position = sm.position
                 }).ToImmutableList();
 
@@ -84,7 +85,7 @@ namespace nadena.dev.ndmf.animator
             obj.parentStateMachinePosition = ParentStateMachinePosition;
             obj.stateMachines = StateMachines.Select(sm => new ChildAnimatorStateMachine
             {
-                stateMachine = context.CommitObject(sm.State),
+                stateMachine = context.CommitObject(sm.StateMachine),
                 position = sm.Position
             }).ToArray();
             obj.states = States.Select(s => new ChildAnimatorState
@@ -192,7 +193,7 @@ namespace nadena.dev.ndmf.animator
 
         public struct VirtualChildStateMachine
         {
-            public VirtualStateMachine State;
+            public VirtualStateMachine StateMachine;
             public Vector3 Position;
         }
 
@@ -208,6 +209,31 @@ namespace nadena.dev.ndmf.animator
             {
                 Object.DestroyImmediate(_stateMachine);
                 _stateMachine = null;
+            }
+        }
+
+        protected override IEnumerable<VirtualNode> _EnumerateChildren()
+        {
+            foreach (var sm in StateMachines)
+            {
+                yield return sm.StateMachine;
+            }
+
+            foreach (var state in States)
+            {
+                yield return state.State;
+            }
+
+            if (DefaultState != null) yield return DefaultState;
+
+            foreach (var transition in AnyStateTransitions)
+            {
+                yield return transition;
+            }
+
+            foreach (var transition in EntryTransitions)
+            {
+                yield return transition;
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -31,6 +32,16 @@ namespace nadena.dev.ndmf.animator
             }
 
             _lastCacheObserver = observer;
+        }
+
+        internal IEnumerable<VirtualNode> EnumerateChildren()
+        {
+            return _EnumerateChildren();
+        }
+
+        protected virtual IEnumerable<VirtualNode> _EnumerateChildren()
+        {
+            yield break;
         }
     }
 }

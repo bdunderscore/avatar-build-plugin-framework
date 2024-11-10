@@ -121,5 +121,10 @@ namespace nadena.dev.ndmf.animator
         {
             throw new NotImplementedException();
         }
+
+        protected override IEnumerable<VirtualNode> _EnumerateChildren()
+        {
+            return Layers;
+        }
     }
 }

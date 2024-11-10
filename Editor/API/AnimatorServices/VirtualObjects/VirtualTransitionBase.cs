@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using UnityEditor.Animations;
 using Object = UnityEngine.Object;
@@ -162,6 +163,12 @@ namespace nadena.dev.ndmf.animator
         {
             if (_transition != null) Object.DestroyImmediate(_transition);
             _transition = null;
+        }
+
+        protected override IEnumerable<VirtualNode> _EnumerateChildren()
+        {
+            if (DestinationState != null) yield return DestinationState;
+            if (DestinationStateMachine != null) yield return DestinationStateMachine;
         }
     }
 }

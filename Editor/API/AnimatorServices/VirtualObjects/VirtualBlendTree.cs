@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -137,6 +138,11 @@ namespace nadena.dev.ndmf.animator
         public override void Dispose()
         {
             Object.DestroyImmediate(_tree);
+        }
+
+        protected override IEnumerable<VirtualNode> _EnumerateChildren()
+        {
+            return Children.Select(c => c.Motion);
         }
     }
 }
