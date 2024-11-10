@@ -149,21 +149,21 @@ namespace nadena.dev.ndmf.animator
             }
 
             var newClip = Object.Instantiate(clip);
-            newClip.name = clip.name;
-
+            
             var virtualClip = new VirtualClip(newClip, false);
-            // Add early to avoid infinite recursion
-            cloneContext.Add(clip, virtualClip);
-
-            VirtualClip refPoseClip = null;
+            
             var settings = AnimationUtility.GetAnimationClipSettings(clip);
             if (settings.additiveReferencePoseClip != null)
             {
-                refPoseClip = cloneContext.Clone(settings.additiveReferencePoseClip);
+                // defer call until after we register this VirtualClip, to avoid infinite recursion
+                cloneContext.DeferCall(() =>
+                {
+                    var refPoseClip = cloneContext.Clone(settings.additiveReferencePoseClip);
+                    settings.additiveReferencePoseClip = null;
+                    AnimationUtility.SetAnimationClipSettings(newClip, settings);
+                    virtualClip.AdditiveReferencePoseClip = refPoseClip;
+                });
             }
-
-            virtualClip.AdditiveReferencePoseClip = refPoseClip;
-            virtualClip.AdditiveReferencePoseTime = settings.additiveReferencePoseTime;
 
             return virtualClip;
         }

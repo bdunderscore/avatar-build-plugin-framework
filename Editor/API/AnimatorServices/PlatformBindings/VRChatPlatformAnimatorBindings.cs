@@ -29,16 +29,15 @@ namespace nadena.dev.ndmf.animator
 
         public IEnumerable<(object, RuntimeAnimatorController, bool)> GetInnateControllers(GameObject root)
         {
-            var vrcAvatarController = root.GetComponent<VRCAvatarDescriptor>();
-            if (vrcAvatarController == null) yield break;
+            if (!root.TryGetComponent<VRCAvatarDescriptor>(out var vrcAvatarDescriptor)) yield break;
 
             // TODO: Fallback layers
-            foreach (var layer in vrcAvatarController.baseAnimationLayers)
+            foreach (var layer in vrcAvatarDescriptor.baseAnimationLayers)
             {
                 yield return (layer.type, layer.animatorController, layer.isDefault);
             }
 
-            foreach (var layer in vrcAvatarController.specialAnimationLayers)
+            foreach (var layer in vrcAvatarDescriptor.specialAnimationLayers)
             {
                 yield return (layer.type, layer.animatorController, layer.isDefault);
             }
@@ -49,11 +48,10 @@ namespace nadena.dev.ndmf.animator
             IDictionary<object, RuntimeAnimatorController> controllers
         )
         {
-            var vrcAvatarController = root.GetComponent<VRCAvatarDescriptor>();
-            if (vrcAvatarController == null) return;
+            if (!root.TryGetComponent<VRCAvatarDescriptor>(out var vrcAvatarDescriptor)) return;
 
-            EditLayers(vrcAvatarController.baseAnimationLayers);
-            EditLayers(vrcAvatarController.specialAnimationLayers);
+            EditLayers(vrcAvatarDescriptor.baseAnimationLayers);
+            EditLayers(vrcAvatarDescriptor.specialAnimationLayers);
 
             void EditLayers(VRCAvatarDescriptor.CustomAnimLayer[] layers)
             {

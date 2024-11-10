@@ -83,41 +83,49 @@ namespace nadena.dev.ndmf.animator
 
         public VirtualAnimatorController Clone(AnimatorController controller)
         {
+            using var _ = new ProfilerScope("Clone Animator Controller", controller);
             return GetOrClone(controller, VirtualAnimatorController.Clone);
         }
         
         public VirtualLayer Clone(AnimatorControllerLayer layer, int index)
         {
+            using var _ = new ProfilerScope("Clone Animator Layer");
             return GetOrClone(layer, (ctx, obj) => VirtualLayer.Clone(ctx, obj, index));
         }
         
         public VirtualStateMachine Clone(AnimatorStateMachine stateMachine)
         {
+            using var _ = new ProfilerScope("Clone State Machine", stateMachine);
             return GetOrClone(stateMachine, VirtualStateMachine.Clone);
         }
 
         public VirtualStateTransition Clone(AnimatorStateTransition transition)
         {
+            using var _ = new ProfilerScope("Clone State Transition", transition);
             return GetOrClone(transition, VirtualStateTransition.Clone);
         }
 
         public VirtualTransition Clone(AnimatorTransition transition)
         {
+            using var _ = new ProfilerScope("Clone Transition", transition);
             return GetOrClone(transition, VirtualTransition.Clone);
         }
 
         public VirtualState Clone(AnimatorState state)
         {
+            using var _ = new ProfilerScope("Clone State", state);
             return GetOrClone(state, VirtualState.Clone);
         }
 
         public VirtualMotion Clone(Motion m)
         {
+            using var _ = new ProfilerScope("Clone Motion", m);
             return GetOrClone(m, VirtualMotion.Clone);
         }
 
         public VirtualClip Clone(AnimationClip clip)
         {
+            using var _ = new ProfilerScope("Clone Clip", clip);
             return GetOrClone(clip, VirtualClip.Clone);
         }
 
