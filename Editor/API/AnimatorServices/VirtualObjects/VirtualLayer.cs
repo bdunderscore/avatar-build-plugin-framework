@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -90,6 +92,22 @@ namespace nadena.dev.ndmf.animator
             set => _isOriginalLayer = I(value);
         }
 
+        private ImmutableDictionary<VirtualState, VirtualMotion> _syncedLayerMotionOverrides;
+
+        public ImmutableDictionary<VirtualState, VirtualMotion> SyncedLayerMotionOverrides
+        {
+            get => _syncedLayerMotionOverrides;
+            set => _syncedLayerMotionOverrides = I(value);
+        }
+
+        private ImmutableDictionary<VirtualState, ImmutableList<StateMachineBehaviour>> _syncedLayerBehaviourOverrides;
+
+        public ImmutableDictionary<VirtualState, ImmutableList<StateMachineBehaviour>> SyncedLayerBehaviourOverrides
+        {
+            get => _syncedLayerBehaviourOverrides;
+            set => _syncedLayerBehaviourOverrides = I(value);
+        }
+
         public static VirtualLayer Clone(CloneContext context, AnimatorControllerLayer layer, int physicalLayerIndex)
         {
             if (layer == null) return null;
@@ -118,6 +136,14 @@ namespace nadena.dev.ndmf.animator
             SyncedLayerIndex = context.CloneSourceToVirtualLayerIndex(layer.syncedLayerIndex);
 
             StateMachine = VirtualStateMachine.Clone(context, layer.stateMachine);
+
+            _syncedLayerMotionOverrides = SyncedLayerOverrideAccess.ExtractStateMotionPairs(layer)
+                ?.ToImmutableDictionary(kvp => context.Clone(kvp.Key), kvp => context.Clone(kvp.Value));
+
+            // TODO: Apply state behavior import processing
+            _syncedLayerBehaviourOverrides = SyncedLayerOverrideAccess.ExtractStateBehaviourPairs(layer)
+                ?.ToImmutableDictionary(kvp => context.Clone(kvp.Key),
+                    kvp => kvp.Value.Cast<StateMachineBehaviour>().ToImmutableList());
         }
 
         private VirtualLayer(CloneContext context, string name)
@@ -155,6 +181,24 @@ namespace nadena.dev.ndmf.animator
         {
             obj.syncedLayerIndex = context.VirtualToPhysicalLayerIndex(SyncedLayerIndex);
             obj.stateMachine = context.CommitObject(StateMachine);
+
+            var motionOverrides = SyncedLayerMotionOverrides ?? ImmutableDictionary<VirtualState, VirtualMotion>.Empty;
+
+            SyncedLayerOverrideAccess.SetStateMotionPairs(obj, motionOverrides.Select(kvp =>
+                new KeyValuePair<AnimatorState, Motion>(
+                    context.CommitObject(kvp.Key),
+                    context.CommitObject(kvp.Value)
+                )));
+
+            var behaviourOverrides = SyncedLayerBehaviourOverrides ??
+                                     ImmutableDictionary<VirtualState, ImmutableList<StateMachineBehaviour>>.Empty;
+
+            // TODO: commit state behaviours
+            SyncedLayerOverrideAccess.SetStateBehaviourPairs(obj, behaviourOverrides.Select(kvp =>
+                new KeyValuePair<AnimatorState, ScriptableObject[]>(
+                    context.CommitObject(kvp.Key),
+                    kvp.Value.Cast<ScriptableObject>().ToArray()
+                )));
         }
 
         public void Dispose()

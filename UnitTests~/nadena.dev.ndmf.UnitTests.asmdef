@@ -4,7 +4,8 @@
     "references": [
       "nadena.dev.ndmf",
       "nadena.dev.ndmf.vrchat",
-      "nadena.dev.ndmf.runtime"
+      "nadena.dev.ndmf.runtime",
+      "nadena.dev.ndmf.tests.runtime"
     ],
     "includePlatforms": [
         "Editor"
