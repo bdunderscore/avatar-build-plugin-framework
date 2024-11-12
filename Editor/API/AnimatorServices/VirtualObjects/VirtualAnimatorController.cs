@@ -75,7 +75,6 @@ namespace nadena.dev.ndmf.animator
 
         public static VirtualAnimatorController Clone(CloneContext context, RuntimeAnimatorController controller)
         {
-            // TODO: AnimatorOverrideController support
             switch (controller)
             {
                 case AnimatorController ac: return new VirtualAnimatorController(context, ac);
