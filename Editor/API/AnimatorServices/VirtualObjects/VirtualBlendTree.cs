@@ -60,7 +60,7 @@ namespace nadena.dev.ndmf.animator
             return new VirtualBlendTree(context, cloned);
         }
 
-        public string Name
+        public override string Name
         {
             get => _tree.name;
             set => _tree.name = I(value);

@@ -76,12 +76,17 @@ namespace nadena.dev.ndmf.animator
         public static VirtualAnimatorController Clone(CloneContext context, RuntimeAnimatorController controller)
         {
             // TODO: AnimatorOverrideController support
-            if (controller is not AnimatorController)
+            switch (controller)
             {
-                return null;
-            }
+                case AnimatorController ac: return new VirtualAnimatorController(context, ac);
+                case AnimatorOverrideController aoc:
+                {
+                    using var _ = context.PushOverrideController(aoc);
 
-            return new VirtualAnimatorController(context, (AnimatorController)controller);
+                    return Clone(context, aoc.runtimeAnimatorController);
+                }
+                default: throw new NotImplementedException($"Unknown controller type {controller.GetType()}");
+            }
         }
 
         private VirtualAnimatorController(CloneContext context, AnimatorController controller)

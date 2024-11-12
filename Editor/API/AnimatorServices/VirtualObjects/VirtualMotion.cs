@@ -23,6 +23,7 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
+        public abstract string Name { get; set; }
 
         [ExcludeFromDocs]
         protected abstract Motion Prepare(object /* CommitContext */ context);

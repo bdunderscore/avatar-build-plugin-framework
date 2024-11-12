@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using UnityEditor.Animations;
 using UnityEngine;
 
@@ -13,12 +14,53 @@ namespace nadena.dev.ndmf.animator
         private int _cloneDepth, _nextVirtualLayer, _virtualLayerBase, _maxMappedPhysLayer;
         private readonly Queue<Action> _deferredCalls = new();
 
+        private ImmutableList<AnimatorOverrideController> _overrideControllers =
+            ImmutableList<AnimatorOverrideController>.Empty;
+
         public CloneContext(IPlatformAnimatorBindings platformBindings)
         {
             PlatformBindings = platformBindings;
             _nextVirtualLayer = _virtualLayerBase = 0x10_0000;
         }
 
+        private class OverrideControllerScope : IDisposable
+        {
+            private readonly CloneContext _context;
+            private readonly ImmutableList<AnimatorOverrideController> _priorStack;
+
+            public OverrideControllerScope(CloneContext context, AnimatorOverrideController controller)
+            {
+                _context = context;
+                _priorStack = context._overrideControllers;
+                _context._overrideControllers = _priorStack.Add(controller);
+            }
+
+            public void Dispose()
+            {
+                _context._overrideControllers = _priorStack;
+            }
+        }
+
+        internal IDisposable PushOverrideController(AnimatorOverrideController controller)
+        {
+            return new OverrideControllerScope(this, controller);
+        }
+
+        /// <summary>
+        ///     Applies any in-scope AnimationOverrideControllers to the given motion to get the effective motion.
+        /// </summary>
+        /// <param name="clip"></param>
+        /// <returns></returns>
+        public AnimationClip MapClipOnClone(AnimationClip clip)
+        {
+            foreach (var controller in _overrideControllers)
+            {
+                clip = controller[clip];
+            }
+
+            return clip;
+        }
+        
         public bool TryGetValue<T, U>(T key, out U value) where U: IDisposable
         {
             var rv = _clones.TryGetValue(key, out var tmp);
@@ -81,7 +123,7 @@ namespace nadena.dev.ndmf.animator
             return _nextVirtualLayer++;
         }
 
-        public VirtualAnimatorController Clone(AnimatorController controller)
+        public VirtualAnimatorController Clone(RuntimeAnimatorController controller)
         {
             using var _ = new ProfilerScope("Clone Animator Controller", controller);
             return GetOrClone(controller, VirtualAnimatorController.Clone);
@@ -131,7 +173,22 @@ namespace nadena.dev.ndmf.animator
 
         public void DeferCall(Action action)
         {
-            if (_cloneDepth > 0) _deferredCalls.Enqueue(action);
+            var overrideStack = _overrideControllers;
+            // Preserve ambient AnimatorOverrideController context when we defer calls
+            if (_cloneDepth > 0)
+                _deferredCalls.Enqueue(() =>
+                {
+                    var priorStack = _overrideControllers;
+                    _overrideControllers = overrideStack;
+                    try
+                    {
+                        action();
+                    }
+                    finally
+                    {
+                        _overrideControllers = priorStack;
+                    }
+                });
             else action();
         }
 

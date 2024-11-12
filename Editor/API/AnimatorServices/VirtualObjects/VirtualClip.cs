@@ -17,7 +17,7 @@ namespace nadena.dev.ndmf.animator
     {
         private AnimationClip _clip;
 
-        public string Name
+        public override string Name
         {
             get => _clip.name;
             set => _clip.name = I(value);
@@ -148,6 +148,8 @@ namespace nadena.dev.ndmf.animator
         )
         {
             if (clip == null) return null;
+
+            clip = cloneContext.MapClipOnClone(clip);
 
             if (cloneContext.PlatformBindings.IsSpecialMotion(clip))
             {
