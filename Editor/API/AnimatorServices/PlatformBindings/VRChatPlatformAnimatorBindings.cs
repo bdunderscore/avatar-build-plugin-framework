@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if NDMF_VRCSDK3_AVATARS
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -67,3 +68,4 @@ namespace nadena.dev.ndmf.animator
         }
     }
 }
+#endif
