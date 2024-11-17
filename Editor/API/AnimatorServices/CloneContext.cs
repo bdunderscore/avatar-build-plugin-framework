@@ -1,6 +1,9 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -61,12 +64,14 @@ namespace nadena.dev.ndmf.animator
 
             return clip;
         }
-        
-        public bool TryGetValue<T, U>(T key, out U value) where U: IDisposable
+
+        public bool TryGetValue<T, U>(T key, out U? value) where U : IDisposable
         {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            
             var rv = _clones.TryGetValue(key, out var tmp);
 
-            if (rv) value = (U)tmp;
+            if (rv) value = (U?)tmp;
             else value = default;
 
             return rv;
@@ -74,17 +79,18 @@ namespace nadena.dev.ndmf.animator
 
         public void Add<T, U>(T key, U value) where U: IDisposable
         {
+            if (key == null) throw new ArgumentNullException(nameof(key));
             _clones.Add(key, value);
         }
 
-        private U GetOrClone<T, U>(T key, Func<CloneContext, T, U> clone) where U : class, IDisposable
+        private U? GetOrClone<T, U>(T? key, Func<CloneContext, T, U> clone) where U : class, IDisposable
         {
             try
             {
                 _cloneDepth++;
 
                 if (key == null || (key is Object obj && obj == null)) return null;
-                if (TryGetValue(key, out U value)) return value;
+                if (TryGetValue(key, out U? value)) return value;
                 value = clone(this, key);
                 _clones[key] = value;
                 return value;
@@ -124,49 +130,57 @@ namespace nadena.dev.ndmf.animator
             return _nextVirtualLayer++;
         }
 
-        public VirtualAnimatorController Clone(RuntimeAnimatorController controller)
+        [return: NotNullIfNotNull("controller")]
+        public VirtualAnimatorController? Clone(RuntimeAnimatorController? controller)
         {
             using var _ = new ProfilerScope("Clone Animator Controller", controller);
             return GetOrClone(controller, VirtualAnimatorController.Clone);
         }
-        
-        public VirtualLayer Clone(AnimatorControllerLayer layer, int index)
+
+        [return: NotNullIfNotNull("layer")]
+        public VirtualLayer? Clone(AnimatorControllerLayer? layer, int index)
         {
             using var _ = new ProfilerScope("Clone Animator Layer");
-            return GetOrClone(layer, (ctx, obj) => VirtualLayer.Clone(ctx, obj, index));
+            return GetOrClone(layer, (ctx, obj) => VirtualLayer.Clone(ctx, obj, index)!);
         }
-        
-        public VirtualStateMachine Clone(AnimatorStateMachine stateMachine)
+
+        [return: NotNullIfNotNull("stateMachine")]
+        public VirtualStateMachine? Clone(AnimatorStateMachine? stateMachine)
         {
             using var _ = new ProfilerScope("Clone State Machine", stateMachine);
             return GetOrClone(stateMachine, VirtualStateMachine.Clone);
         }
 
-        public VirtualStateTransition Clone(AnimatorStateTransition transition)
+        [return: NotNullIfNotNull("transition")]
+        public VirtualStateTransition? Clone(AnimatorStateTransition? transition)
         {
             using var _ = new ProfilerScope("Clone State Transition", transition);
             return GetOrClone(transition, VirtualStateTransition.Clone);
         }
 
-        public VirtualTransition Clone(AnimatorTransition transition)
+        [return: NotNullIfNotNull("transition")]
+        public VirtualTransition? Clone(AnimatorTransition? transition)
         {
             using var _ = new ProfilerScope("Clone Transition", transition);
             return GetOrClone(transition, VirtualTransition.Clone);
         }
 
-        public VirtualState Clone(AnimatorState state)
+        [return: NotNullIfNotNull("state")]
+        public VirtualState? Clone(AnimatorState? state)
         {
             using var _ = new ProfilerScope("Clone State", state);
             return GetOrClone(state, VirtualState.Clone);
         }
 
-        public VirtualMotion Clone(Motion m)
+        [return: NotNullIfNotNull("m")]
+        public VirtualMotion? Clone(Motion? m)
         {
             using var _ = new ProfilerScope("Clone Motion", m);
             return GetOrClone(m, VirtualMotion.Clone);
         }
 
-        public VirtualClip Clone(AnimationClip clip)
+        [return: NotNullIfNotNull("clip")]
+        public VirtualClip? Clone(AnimationClip? clip)
         {
             using var _ = new ProfilerScope("Clone Clip", clip);
             return GetOrClone(clip, VirtualClip.Clone);

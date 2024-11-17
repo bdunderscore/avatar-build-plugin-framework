@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -10,11 +12,12 @@ using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
+    [PublicAPI]
     public class VirtualState : VirtualNode, ICommitable<AnimatorState>, IDisposable
     {
         private AnimatorState _state;
 
-        private ImmutableList<StateMachineBehaviour> _behaviours;
+        private ImmutableList<StateMachineBehaviour> _behaviours = ImmutableList<StateMachineBehaviour>.Empty;
 
         public ImmutableList<StateMachineBehaviour> Behaviours
         {
@@ -27,9 +30,7 @@ namespace nadena.dev.ndmf.animator
             AnimatorState state
         )
         {
-            if (state == null) return null;
-
-            if (context.TryGetValue(state, out VirtualState clone)) return clone;
+            if (context.TryGetValue(state, out VirtualState? clone)) return clone!;
 
             var clonedState = new AnimatorState();
             // We can't use Instantiate for AnimatorStates, for some reason...
@@ -47,7 +48,7 @@ namespace nadena.dev.ndmf.animator
         {
             _state = new AnimatorState();
             Behaviours = ImmutableList<StateMachineBehaviour>.Empty;
-            Transitions = ImmutableList<VirtualStateTransition>.Empty;
+            _transitions = ImmutableList<VirtualStateTransition>.Empty;
         }
 
         private VirtualState(CloneContext context, AnimatorState clonedState)
@@ -56,13 +57,22 @@ namespace nadena.dev.ndmf.animator
 
             // TODO: Should we rewrite any internal properties of these StateMachineBehaviours?
             Behaviours = _state.behaviours.Select(b => Object.Instantiate(b)).ToImmutableList();
-            context.DeferCall(() => { Transitions = _state.transitions.Select(context.Clone).ToImmutableList(); });
+
+            _transitions = ImmutableList<VirtualStateTransition>.Empty;
+            context.DeferCall(() =>
+            {
+                Transitions = _state.transitions
+                    .Where(t => t != null)
+                    .Select(context.Clone)
+                    .ToImmutableList()!;
+            });
+            
             Motion = context.Clone(_state.motion);
         }
 
-        private VirtualMotion _motion;
+        private VirtualMotion? _motion;
 
-        public VirtualMotion Motion
+        public VirtualMotion? Motion
         {
             get => _motion;
             set => _motion = I(value);
@@ -80,8 +90,7 @@ namespace nadena.dev.ndmf.animator
             set => _state.cycleOffset = I(value);
         }
 
-        [CanBeNull]
-        public string CycleOffsetParameter
+        public string? CycleOffsetParameter
         {
             get => _state.cycleOffsetParameterActive ? _state.cycleOffsetParameter : null;
             set
@@ -104,8 +113,7 @@ namespace nadena.dev.ndmf.animator
             set => _state.mirror = I(value);
         }
 
-        [CanBeNull]
-        public string MirrorParameter
+        public string? MirrorParameter
         {
             get => _state.mirrorParameterActive ? _state.mirrorParameter : null;
             set
@@ -124,8 +132,7 @@ namespace nadena.dev.ndmf.animator
             set => _state.speed = I(value);
         }
 
-        [CanBeNull]
-        public string SpeedParameter
+        public string? SpeedParameter
         {
             get => _state.speedParameterActive ? _state.speedParameter : null;
             set
@@ -142,8 +149,7 @@ namespace nadena.dev.ndmf.animator
             set => _state.tag = I(value);
         }
 
-        [CanBeNull]
-        public string TimeParameter
+        public string? TimeParameter
         {
             get => _state.timeParameterActive ? _state.timeParameter : null;
             set
@@ -192,11 +198,10 @@ namespace nadena.dev.ndmf.animator
             {
                 Object.DestroyImmediate(behaviour);
             }
-            
-            Behaviours.Clear();
+
+            Behaviours = Behaviours.Clear();
             
             if (_state != null) Object.DestroyImmediate(_state);
-            _state = null;
         }
 
         public override string ToString()

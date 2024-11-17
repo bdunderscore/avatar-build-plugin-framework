@@ -1,21 +1,23 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 
 namespace nadena.dev.ndmf.animator
 {
-    public struct LayerPriority : IComparable<LayerPriority>
+    public struct LayerPriority : IComparable<LayerPriority>, IEquatable<LayerPriority>
     {
         public static LayerPriority Default = new();
-        
-        internal int Priority;
+
+        private readonly int _priority;
 
         public LayerPriority(int priority)
         {
-            Priority = priority;
+            _priority = priority;
         }
 
         public int CompareTo(LayerPriority other)
         {
-            if (Priority != other.Priority) return Priority.CompareTo(other.Priority);
+            if (_priority != other._priority) return _priority.CompareTo(other._priority);
 
             return 0;
         }
@@ -52,12 +54,17 @@ namespace nadena.dev.ndmf.animator
 
         public override bool Equals(object obj)
         {
-            return obj is LayerPriority other && this == other;
+            return obj is LayerPriority other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return Priority.GetHashCode();
+            return _priority;
+        }
+
+        public bool Equals(LayerPriority other)
+        {
+            return _priority == other._priority;
         }
     }
 }

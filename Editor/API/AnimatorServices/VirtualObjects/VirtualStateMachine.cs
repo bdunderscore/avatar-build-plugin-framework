@@ -1,8 +1,9 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -19,8 +20,7 @@ namespace nadena.dev.ndmf.animator
 
         public static VirtualStateMachine Clone(CloneContext context, AnimatorStateMachine stateMachine)
         {
-            if (stateMachine == null) return null;
-            if (context.TryGetValue(stateMachine, out VirtualStateMachine clone)) return clone;
+            if (context.TryGetValue(stateMachine, out VirtualStateMachine? clone)) return clone!;
 
             var vsm = new VirtualStateMachine(context, stateMachine.name);
 
@@ -28,33 +28,44 @@ namespace nadena.dev.ndmf.animator
             {
                 vsm.AnyStatePosition = stateMachine.anyStatePosition;
                 vsm.AnyStateTransitions = stateMachine.anyStateTransitions
-                    .Select(context.Clone).ToImmutableList();
+                    .Where(t => t != null)
+                    .Select(context.Clone)
+                    .ToImmutableList()!;
                 vsm.Behaviours = stateMachine.behaviours.Select(Object.Instantiate).ToImmutableList();
                 vsm.DefaultState = context.Clone(stateMachine.defaultState);
                 vsm.EntryPosition = stateMachine.entryPosition;
                 vsm.EntryTransitions = stateMachine.entryTransitions
-                    .Select(context.Clone).ToImmutableList();
+                    .Where(t => t != null)
+                    .Select(context.Clone)
+                    .ToImmutableList()!;
                 vsm.ExitPosition = stateMachine.exitPosition;
                 vsm.ParentStateMachinePosition = stateMachine.parentStateMachinePosition;
 
-                vsm.StateMachines = stateMachine.stateMachines.Select(sm => new VirtualChildStateMachine
-                {
-                    StateMachine = context.Clone(sm.stateMachine),
-                    Position = sm.position
-                }).ToImmutableList();
+                vsm.StateMachines = stateMachine.stateMachines
+                    .Where(sm => sm.stateMachine != null)
+                    .Select(sm => new VirtualChildStateMachine
+                    {
+                        StateMachine = context.Clone(sm.stateMachine),
+                        Position = sm.position
+                    }).ToImmutableList();
 
-                vsm.States = stateMachine.states.Select(s => new VirtualChildState
-                {
-                    State = context.Clone(s.state),
-                    Position = s.position
-                }).ToImmutableList();
+                vsm.States = stateMachine.states
+                    .Where(s => s.state != null)
+                    .Select(s => new VirtualChildState
+                    {
+                        State = context.Clone(s.state),
+                        Position = s.position
+                    }).ToImmutableList();
 
                 vsm.StateMachineTransitions = stateMachine.stateMachines
+                    .Where(sm => sm.stateMachine != null)
                     .ToImmutableDictionary(
                         sm => context.Clone(sm.stateMachine),
                         sm => stateMachine.GetStateMachineTransitions(sm.stateMachine)
-                            .Select(context.Clone).ToImmutableList()
-                    );
+                            .Where(t => t != null)
+                            .Select(context.Clone)
+                            .ToImmutableList()
+                    )!;
             });
 
             return vsm;
@@ -69,24 +80,22 @@ namespace nadena.dev.ndmf.animator
         {
             _context = context;
             _stateMachine = new AnimatorStateMachine();
-            Name = name;
+            _name = name;
             AnyStatePosition = _stateMachine.anyStatePosition;
             EntryPosition = _stateMachine.entryPosition;
             ExitPosition = _stateMachine.exitPosition;
 
-            EntryTransitions = ImmutableList<VirtualTransition>.Empty;
-            AnyStateTransitions = ImmutableList<VirtualStateTransition>.Empty;
-            Behaviours = ImmutableList<StateMachineBehaviour>.Empty;
-            StateMachines = ImmutableList<VirtualChildStateMachine>.Empty;
-            States = ImmutableList<VirtualChildState>.Empty;
-            StateMachineTransitions = ImmutableDictionary<VirtualStateMachine, ImmutableList<VirtualTransition>>.Empty;
+            _entryTransitions = ImmutableList<VirtualTransition>.Empty;
+            _anyStateTransitions = ImmutableList<VirtualStateTransition>.Empty;
+            _behaviours = ImmutableList<StateMachineBehaviour>.Empty;
+            _stateMachines = ImmutableList<VirtualChildStateMachine>.Empty;
+            _states = ImmutableList<VirtualChildState>.Empty;
+            _stateMachineTransitions = ImmutableDictionary<VirtualStateMachine, ImmutableList<VirtualTransition>>.Empty;
         }
         
         AnimatorStateMachine ICommitable<AnimatorStateMachine>.Prepare(CommitContext context)
         {
-            var tmp = _stateMachine;
-            _stateMachine = null;
-            return tmp;
+            return _stateMachine;
         }
 
         void ICommitable<AnimatorStateMachine>.Commit(CommitContext context, AnimatorStateMachine obj)
@@ -214,9 +223,9 @@ namespace nadena.dev.ndmf.animator
             set => _stateMachineTransitions = I(value);
         }
 
-        private VirtualState _defaultState;
+        private VirtualState? _defaultState;
 
-        public VirtualState DefaultState
+        public VirtualState? DefaultState
         {
             get => _defaultState;
             set => _defaultState = I(value);
@@ -239,7 +248,6 @@ namespace nadena.dev.ndmf.animator
             if (_stateMachine != null)
             {
                 Object.DestroyImmediate(_stateMachine);
-                _stateMachine = null;
             }
         }
 
@@ -268,7 +276,7 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        public VirtualState AddState(string name, [CanBeNull] VirtualMotion motion = null, Vector3? position = null)
+        public VirtualState AddState(string name, VirtualMotion? motion = null, Vector3? position = null)
         {
             var state = VirtualState.Create(_context, name);
 

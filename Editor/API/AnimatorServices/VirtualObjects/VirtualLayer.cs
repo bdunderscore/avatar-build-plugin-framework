@@ -1,7 +1,10 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -11,6 +14,7 @@ namespace nadena.dev.ndmf.animator
     /// <summary>
     ///     A layer within a VirtualAnimatorController
     /// </summary>
+    [PublicAPI]
     public class VirtualLayer : VirtualNode, ICommitable<AnimatorControllerLayer>, IDisposable
     {
         /// <summary>
@@ -18,8 +22,7 @@ namespace nadena.dev.ndmf.animator
         ///     even if layer order changes. This will typically be a very large value (>2^16).
         /// </summary>
         public int VirtualLayerIndex { get; }
-
-
+        
         private VirtualStateMachine _stateMachine;
 
         public VirtualStateMachine StateMachine
@@ -28,9 +31,9 @@ namespace nadena.dev.ndmf.animator
             set => _stateMachine = I(value);
         }
 
-        private AvatarMask _avatarMask;
+        private AvatarMask? _avatarMask;
 
-        public AvatarMask AvatarMask
+        public AvatarMask? AvatarMask
         {
             get => _avatarMask;
             set => _avatarMask = I(value);
@@ -108,13 +111,9 @@ namespace nadena.dev.ndmf.animator
             set => _syncedLayerBehaviourOverrides = I(value);
         }
 
-        public static VirtualLayer Clone(CloneContext context, AnimatorControllerLayer layer, int physicalLayerIndex)
+        internal static VirtualLayer Clone(CloneContext context, AnimatorControllerLayer layer, int physicalLayerIndex)
         {
-            if (layer == null) return null;
-
             var clone = new VirtualLayer(context, layer, physicalLayerIndex);
-
-            // TODO: motion, behavior overrides
 
             return clone;
         }
@@ -127,7 +126,7 @@ namespace nadena.dev.ndmf.animator
         private VirtualLayer(CloneContext context, AnimatorControllerLayer layer, int physicalLayerIndex)
         {
             VirtualLayerIndex = context.CloneSourceToVirtualLayerIndex(physicalLayerIndex);
-            Name = layer.name;
+            _name = layer.name;
             AvatarMask = layer.avatarMask == null ? null : Object.Instantiate(layer.avatarMask);
             BlendingMode = layer.blendingMode;
             DefaultWeight = layer.defaultWeight;
@@ -135,21 +134,25 @@ namespace nadena.dev.ndmf.animator
             SyncedLayerAffectsTiming = layer.syncedLayerAffectsTiming;
             SyncedLayerIndex = context.CloneSourceToVirtualLayerIndex(layer.syncedLayerIndex);
 
-            StateMachine = VirtualStateMachine.Clone(context, layer.stateMachine);
+            _stateMachine = context.Clone(layer.stateMachine);
 
             _syncedLayerMotionOverrides = SyncedLayerOverrideAccess.ExtractStateMotionPairs(layer)
-                ?.ToImmutableDictionary(kvp => context.Clone(kvp.Key), kvp => context.Clone(kvp.Value));
+                                              ?.ToImmutableDictionary(kvp => context.Clone(kvp.Key),
+                                                  kvp => context.Clone(kvp.Value))
+                                          ?? ImmutableDictionary<VirtualState, VirtualMotion>.Empty;
 
             // TODO: Apply state behavior import processing
             _syncedLayerBehaviourOverrides = SyncedLayerOverrideAccess.ExtractStateBehaviourPairs(layer)
                 ?.ToImmutableDictionary(kvp => context.Clone(kvp.Key),
-                    kvp => kvp.Value.Cast<StateMachineBehaviour>().ToImmutableList());
+                    kvp => kvp.Value.Cast<StateMachineBehaviour>().ToImmutableList())
+                                             ?? ImmutableDictionary<VirtualState, ImmutableList<StateMachineBehaviour>>
+                                                 .Empty;
         }
 
         private VirtualLayer(CloneContext context, string name)
         {
             VirtualLayerIndex = context.AllocateSingleVirtualLayer();
-            Name = name;
+            _name = name;
             AvatarMask = null;
             BlendingMode = AnimatorLayerBlendingMode.Override;
             DefaultWeight = 1;
@@ -157,7 +160,10 @@ namespace nadena.dev.ndmf.animator
             SyncedLayerAffectsTiming = false;
             SyncedLayerIndex = -1;
 
-            StateMachine = VirtualStateMachine.Create(context, name);
+            _stateMachine = VirtualStateMachine.Create(context, name);
+            _syncedLayerMotionOverrides = ImmutableDictionary<VirtualState, VirtualMotion>.Empty;
+            _syncedLayerBehaviourOverrides =
+                ImmutableDictionary<VirtualState, ImmutableList<StateMachineBehaviour>>.Empty;
         }
 
         AnimatorControllerLayer ICommitable<AnimatorControllerLayer>.Prepare(CommitContext context)
@@ -182,19 +188,14 @@ namespace nadena.dev.ndmf.animator
             obj.syncedLayerIndex = context.VirtualToPhysicalLayerIndex(SyncedLayerIndex);
             obj.stateMachine = context.CommitObject(StateMachine);
 
-            var motionOverrides = SyncedLayerMotionOverrides ?? ImmutableDictionary<VirtualState, VirtualMotion>.Empty;
-
-            SyncedLayerOverrideAccess.SetStateMotionPairs(obj, motionOverrides.Select(kvp =>
+            SyncedLayerOverrideAccess.SetStateMotionPairs(obj, SyncedLayerMotionOverrides.Select(kvp =>
                 new KeyValuePair<AnimatorState, Motion>(
                     context.CommitObject(kvp.Key),
                     context.CommitObject(kvp.Value)
                 )));
 
-            var behaviourOverrides = SyncedLayerBehaviourOverrides ??
-                                     ImmutableDictionary<VirtualState, ImmutableList<StateMachineBehaviour>>.Empty;
-
             // TODO: commit state behaviours
-            SyncedLayerOverrideAccess.SetStateBehaviourPairs(obj, behaviourOverrides.Select(kvp =>
+            SyncedLayerOverrideAccess.SetStateBehaviourPairs(obj, SyncedLayerBehaviourOverrides.Select(kvp =>
                 new KeyValuePair<AnimatorState, ScriptableObject[]>(
                     context.CommitObject(kvp.Key),
                     kvp.Value.Cast<ScriptableObject>().ToArray()

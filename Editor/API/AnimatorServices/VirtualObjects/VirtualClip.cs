@@ -1,10 +1,12 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
-using Debug = System.Diagnostics.Debug;
 using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
@@ -75,9 +77,9 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        private VirtualMotion _additiveReferencePoseClip;
+        private VirtualMotion? _additiveReferencePoseClip;
 
-        public VirtualMotion AdditiveReferencePoseClip
+        public VirtualMotion? AdditiveReferencePoseClip
         {
             get => _additiveReferencePoseClip;
             set => _additiveReferencePoseClip = I(value);
@@ -115,7 +117,7 @@ namespace nadena.dev.ndmf.animator
         {
             // If null and Dirty is false, the curve has not been cached yet.
             // If null and Dirty is true, the curve has been deleted.
-            public T Value;
+            public T? Value;
             public bool Dirty;
 
             public override string ToString()
@@ -140,7 +142,7 @@ namespace nadena.dev.ndmf.animator
         ///     Clones an animation clip into a VirtualClip. The provided BuildContext is used to determine which platform
         ///     to use to query for marker clips; if a marker clip is found, it will be treated as immutable.
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="cloneContext"></param>
         /// <param name="clip"></param>
         /// <returns></returns>
         public static VirtualClip Clone(
@@ -148,8 +150,6 @@ namespace nadena.dev.ndmf.animator
             AnimationClip clip
         )
         {
-            if (clip == null) return null;
-
             clip = cloneContext.MapClipOnClone(clip);
 
             if (cloneContext.PlatformBindings.IsSpecialMotion(clip))
@@ -157,11 +157,9 @@ namespace nadena.dev.ndmf.animator
                 return FromMarker(clip);
             }
 
-            // workaround Rider warning bug
-            VirtualClip clonedClip = null;
-            if (cloneContext?.TryGetValue(clip, out clonedClip) == true)
+            if (cloneContext.TryGetValue(clip, out VirtualClip? clonedClip))
             {
-                return clonedClip;
+                return clonedClip!;
             }
 
             var newClip = Object.Instantiate(clip);
@@ -320,7 +318,7 @@ namespace nadena.dev.ndmf.animator
                 }
             }
 
-            return cached.Value;
+            return cached.Value!;
         }
 
         public ObjectReferenceKeyframe[] GetObjectCurve(EditorCurveBinding binding)
@@ -334,7 +332,7 @@ namespace nadena.dev.ndmf.animator
                 }
             }
 
-            return cached.Value;
+            return cached.Value!;
         }
 
         public void SetFloatCurve(EditorCurveBinding binding, AnimationCurve curve)
@@ -388,7 +386,11 @@ namespace nadena.dev.ndmf.animator
             return _clip;
         }
 
-        protected override void Commit(object context_, Motion obj)
+        protected override void Commit(
+            [SuppressMessage("ReSharper", "InconsistentNaming")]
+            object context_,
+            Motion obj
+        )
         {
             if (IsMarkerClip || !IsDirty) return;
             
@@ -441,8 +443,6 @@ namespace nadena.dev.ndmf.animator
                 : null;
             settings.additiveReferencePoseTime = AdditiveReferencePoseTime;
             AnimationUtility.SetAnimationClipSettings(clip, settings);
-            
-            this._clip = null;
         }
 
         public AnimationCurve GetFloatCurve(string path, Type type, string prop)
@@ -468,7 +468,6 @@ namespace nadena.dev.ndmf.animator
         public override void Dispose()
         {
             if (_clip != null) Object.DestroyImmediate(_clip);
-            this._clip = null;
         }
     }
 }

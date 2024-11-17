@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 
 namespace nadena.dev.ndmf.animator
@@ -6,7 +8,7 @@ namespace nadena.dev.ndmf.animator
     [ExcludeFromDocs]
     public abstract class VirtualNode
     {
-        private Action _lastCacheObserver;
+        private Action? _lastCacheObserver;
 
         internal VirtualNode()
         {
@@ -24,7 +26,7 @@ namespace nadena.dev.ndmf.animator
             return val;
         }
 
-        internal void RegisterCacheObserver(Action observer)
+        internal void RegisterCacheObserver(Action? observer)
         {
             if (observer != _lastCacheObserver && _lastCacheObserver != null)
             {

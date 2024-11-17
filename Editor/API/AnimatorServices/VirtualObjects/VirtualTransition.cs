@@ -1,4 +1,6 @@
-﻿using UnityEditor.Animations;
+﻿#nullable enable
+
+using UnityEditor.Animations;
 
 namespace nadena.dev.ndmf.animator
 {

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+
+using System.Collections.Generic;
 using nadena.dev.ndmf.runtime;
 using UnityEngine;
 
@@ -53,9 +55,13 @@ namespace nadena.dev.ndmf.animator
 
             foreach (var kvp in _objectToOriginalPaths)
             {
+                var virtualPath = GetVirtualPathForObject(kvp.Key);
+
+                if (virtualPath == null) continue;
+                
                 foreach (var path in kvp.Value)
                 {
-                    _originalToMappedPath[path] = GetVirtualPathForObject(kvp.Key);
+                    _originalToMappedPath[path] = virtualPath;
                 }
             }
         }
@@ -70,18 +76,18 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        public GameObject GetObjectForPath(string path)
+        public GameObject? GetObjectForPath(string path)
         {
             var xform = _pathToObject.GetValueOrDefault(path);
             return xform ? xform.gameObject : null;
         }
 
-        public string GetVirtualPathForObject(GameObject obj)
+        public string? GetVirtualPathForObject(GameObject obj)
         {
             return GetVirtualPathForObject(obj.transform);
         }
 
-        public string GetVirtualPathForObject(Transform t)
+        public string? GetVirtualPathForObject(Transform t)
         {
             if (_objectToOriginalPaths.TryGetValue(t, out var paths))
             {

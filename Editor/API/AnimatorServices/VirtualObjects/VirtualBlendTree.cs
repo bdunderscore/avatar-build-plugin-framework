@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor;
@@ -10,13 +11,12 @@ namespace nadena.dev.ndmf.animator
     public class VirtualBlendTree : VirtualMotion
     {
         private readonly BlendTree _tree;
-        private VirtualChildMotion _motions;
 
         public sealed class VirtualChildMotion
         {
-            public VirtualMotion Motion;
+            public VirtualMotion? Motion;
             public float CycleOffset;
-            public string DirectBlendParameter;
+            public string DirectBlendParameter = "Blend";
             public bool Mirror;
             public float Threshold;
             public Vector2 Position;
@@ -26,32 +26,29 @@ namespace nadena.dev.ndmf.animator
         private VirtualBlendTree(CloneContext context, BlendTree cloned)
         {
             _tree = cloned;
+            _children = ImmutableList<VirtualChildMotion>.Empty;
 
             context.DeferCall(() =>
             {
-                Children = _tree.children.Select(m =>
+                Children = _tree.children.Select(m => new VirtualChildMotion
                 {
-                    return new VirtualChildMotion
-                    {
-                        Motion = context.Clone(m.motion),
-                        CycleOffset = m.cycleOffset,
-                        DirectBlendParameter = m.directBlendParameter,
-                        Mirror = m.mirror,
-                        Threshold = m.threshold,
-                        Position = m.position,
-                        TimeScale = m.timeScale
-                    };
+                    Motion = context.Clone(m.motion),
+                    CycleOffset = m.cycleOffset,
+                    DirectBlendParameter = m.directBlendParameter,
+                    Mirror = m.mirror,
+                    Threshold = m.threshold,
+                    Position = m.position,
+                    TimeScale = m.timeScale
                 }).ToImmutableList();
             });
         }
 
-        public static VirtualBlendTree Clone(
+        internal static VirtualBlendTree Clone(
             CloneContext context,
             BlendTree tree
         )
         {
-            if (tree == null) return null;
-            if (context.TryGetValue(tree, out VirtualBlendTree existing)) return existing;
+            if (context.TryGetValue(tree, out VirtualBlendTree? existing)) return existing!;
 
             var cloned = new BlendTree();
             EditorUtility.CopySerialized(tree, cloned);
@@ -142,7 +139,7 @@ namespace nadena.dev.ndmf.animator
 
         protected override IEnumerable<VirtualNode> _EnumerateChildren()
         {
-            return Children.Select(c => c.Motion);
+            return Children.Where(c => c.Motion != null).Select(c => c.Motion!);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -17,14 +18,14 @@ namespace nadena.dev.ndmf.animator
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     internal class SyncedLayerOverrideAccess
     {
-        public static readonly Func<AnimatorControllerLayer, IEnumerable<KeyValuePair<AnimatorState, Motion>>>
+        public static readonly Func<AnimatorControllerLayer, IEnumerable<KeyValuePair<AnimatorState, Motion>>?>
             ExtractStateMotionPairs;
 
         public static readonly Action<AnimatorControllerLayer, IEnumerable<KeyValuePair<AnimatorState, Motion>>>
             SetStateMotionPairs;
 
         public static readonly
-            Func<AnimatorControllerLayer, IEnumerable<KeyValuePair<AnimatorState, ScriptableObject[]>>>
+            Func<AnimatorControllerLayer, IEnumerable<KeyValuePair<AnimatorState, ScriptableObject[]>>?>
             ExtractStateBehaviourPairs;
 
         public static readonly

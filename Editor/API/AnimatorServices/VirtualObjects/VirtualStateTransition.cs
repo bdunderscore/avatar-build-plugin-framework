@@ -1,7 +1,11 @@
-﻿using UnityEditor.Animations;
+﻿#nullable enable
+
+using JetBrains.Annotations;
+using UnityEditor.Animations;
 
 namespace nadena.dev.ndmf.animator
 {
+    [PublicAPI]
     public class VirtualStateTransition : VirtualTransitionBase
     {
         private readonly AnimatorStateTransition _stateTransition;

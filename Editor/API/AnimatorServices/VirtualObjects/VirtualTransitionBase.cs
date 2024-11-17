@@ -1,17 +1,23 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using JetBrains.Annotations;
 using UnityEditor.Animations;
 using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
+    [PublicAPI]
     public class VirtualTransitionBase : VirtualNode, ICommitable<AnimatorTransitionBase>, IDisposable
     {
         protected AnimatorTransitionBase _transition;
-        private ImmutableList<AnimatorCondition> _conditions;
 
-        internal VirtualTransitionBase(CloneContext context, AnimatorTransitionBase cloned)
+        // null indicates we've deferred reading the conditions from the transition object
+        private ImmutableList<AnimatorCondition>? _conditions;
+
+        internal VirtualTransitionBase(CloneContext? context, AnimatorTransitionBase cloned)
         {
             _transition = cloned;
 
@@ -53,9 +59,9 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        private VirtualState _destinationState;
+        private VirtualState? _destinationState;
 
-        public VirtualState DestinationState
+        public VirtualState? DestinationState
         {
             get => _destinationState;
             private set
@@ -65,9 +71,9 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        private VirtualStateMachine _destinationStateMachine;
+        private VirtualStateMachine? _destinationStateMachine;
 
-        public VirtualStateMachine DestinationStateMachine
+        public VirtualStateMachine? DestinationStateMachine
         {
             get => _destinationStateMachine;
             private set
@@ -95,11 +101,9 @@ namespace nadena.dev.ndmf.animator
             AnimatorTransitionBase transition
         )
         {
-            if (transition == null) return null;
+            if (context.TryGetValue(transition, out VirtualStateTransition? clone)) return clone!;
 
-            if (context.TryGetValue(transition, out VirtualStateTransition clone)) return clone;
-
-            var cloned = Object.Instantiate(transition);
+            var cloned = Object.Instantiate(transition)!;
             cloned.name = transition.name;
 
             switch (cloned)
@@ -140,8 +144,6 @@ namespace nadena.dev.ndmf.animator
 
         void ICommitable<AnimatorTransitionBase>.Commit(CommitContext context, AnimatorTransitionBase obj)
         {
-            _transition = null;
-
             if (DestinationState != null)
             {
                 obj.destinationState = context.CommitObject(DestinationState);
@@ -162,7 +164,6 @@ namespace nadena.dev.ndmf.animator
         public void Dispose()
         {
             if (_transition != null) Object.DestroyImmediate(_transition);
-            _transition = null;
         }
 
         protected override IEnumerable<VirtualNode> _EnumerateChildren()

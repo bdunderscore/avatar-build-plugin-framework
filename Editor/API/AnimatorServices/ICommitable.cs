@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
@@ -16,6 +19,7 @@ namespace nadena.dev.ndmf.animator
         ///     Fills in all fields of the destination unity object. This may recurse back into the CommitContext.
         /// </summary>
         /// <param name="context"></param>
+        /// <param name="obj">Object returned from Prepare</param>
         void Commit(CommitContext context, T obj);
     }
 
@@ -25,7 +29,8 @@ namespace nadena.dev.ndmf.animator
         private readonly Dictionary<int, VirtualLayer> _virtIndexToVirtLayer = new();
         private readonly Dictionary<VirtualLayer, int> _virtLayerToPhysIndex = new();
 
-        internal R CommitObject<R>(ICommitable<R> obj) where R : class
+        [return: NotNullIfNotNull("obj")]
+        internal R? CommitObject<R>(ICommitable<R>? obj) where R : class
         {
             if (obj == null) return null;
             if (_commitCache.TryGetValue(obj, out var result)) return (R)result;

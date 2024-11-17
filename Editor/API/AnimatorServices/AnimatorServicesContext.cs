@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
@@ -9,14 +11,20 @@ namespace nadena.dev.ndmf.animator
     {
         private class LayerState
         {
-            internal RuntimeAnimatorController originalController;
-            internal VirtualAnimatorController virtualController;
-        }
+            internal readonly RuntimeAnimatorController? OriginalController;
+            internal VirtualAnimatorController? VirtualController;
 
-        private CloneContext _cloneContext;
+            public LayerState(RuntimeAnimatorController? originalController)
+            {
+                OriginalController = originalController;
+            }
+        }
+        
         private readonly Dictionary<object, LayerState> _layerStates = new();
 
-        private IPlatformAnimatorBindings _platformBindings;
+        // initialized on activate
+        private IPlatformAnimatorBindings? _platformBindings;
+        private CloneContext? _cloneContext;
 
         public void OnActivate(BuildContext context)
         {
@@ -33,20 +41,16 @@ namespace nadena.dev.ndmf.animator
 
             _cloneContext = new CloneContext(_platformBindings);
 
-            foreach (var (type, controller, isDefault) in _platformBindings.GetInnateControllers(root))
+            foreach (var (type, controller, _) in _platformBindings.GetInnateControllers(root))
             {
-                _layerStates[type] = new LayerState
-                {
-                    originalController = controller,
-                    virtualController = null
-                };
+                _layerStates[type] = new LayerState(controller);
 
-                // TEMP
+                // TEMP - force all layers to be processed
                 _ = this[type];
             }
         }
 
-        public VirtualAnimatorController this[object key]
+        public VirtualAnimatorController? this[object key]
         {
             get
             {
@@ -55,16 +59,16 @@ namespace nadena.dev.ndmf.animator
                     return null;
                 }
 
-                if (state.virtualController == null)
+                if (state.VirtualController == null)
                 {
-                    state.virtualController = _cloneContext.Clone(state.originalController);
+                    state.VirtualController = _cloneContext!.Clone(state.OriginalController);
                 }
 
-                return state.virtualController;
+                return state.VirtualController;
             }
-            set => _layerStates[key] = new LayerState
+            set => _layerStates[key] = new LayerState(null)
             {
-                virtualController = value
+                VirtualController = value
             };
         }
 
@@ -74,13 +78,13 @@ namespace nadena.dev.ndmf.animator
 
             var commitContext = new CommitContext();
 
-            var controllers = _layerStates.Where(kvp => kvp.Value.virtualController != null)
+            var controllers = _layerStates.Where(kvp => kvp.Value.VirtualController != null)
                 .ToDictionary(
                     k => k.Key,
-                    v => (RuntimeAnimatorController)commitContext.CommitObject(v.Value.virtualController)
+                    v => (RuntimeAnimatorController)commitContext.CommitObject(v.Value.VirtualController!)
                 );
 
-            _platformBindings.CommitInnateControllers(root, controllers);
+            _platformBindings!.CommitInnateControllers(root, controllers);
         }
     }
 }

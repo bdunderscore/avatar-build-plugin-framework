@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -41,8 +43,8 @@ namespace nadena.dev.ndmf.animator
         public VirtualAnimatorController(CloneContext context, string name = "")
         {
             _context = context;
+            _parameters = ImmutableDictionary<string, AnimatorControllerParameter>.Empty;
             Name = name;
-            Parameters = ImmutableDictionary<string, AnimatorControllerParameter>.Empty;
         }
 
         public void AddLayer(LayerPriority priority, VirtualLayer layer)
@@ -73,7 +75,7 @@ namespace nadena.dev.ndmf.animator
             get { return _layers.Values.SelectMany(l => l.Layers); }
         }
 
-        public static VirtualAnimatorController Clone(CloneContext context, RuntimeAnimatorController controller)
+        internal static VirtualAnimatorController Clone(CloneContext context, RuntimeAnimatorController controller)
         {
             switch (controller)
             {
@@ -90,8 +92,9 @@ namespace nadena.dev.ndmf.animator
 
         private VirtualAnimatorController(CloneContext context, AnimatorController controller)
         {
+            _context = context;
             Name = controller.name;
-            Parameters = controller.parameters.ToImmutableDictionary(p => p.name);
+            _parameters = controller.parameters.ToImmutableDictionary(p => p.name);
 
             var srcLayers = controller.layers;
             context.AllocateVirtualLayerSpace(srcLayers.Length);
