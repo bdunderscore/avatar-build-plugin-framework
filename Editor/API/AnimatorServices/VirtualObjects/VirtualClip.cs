@@ -4,6 +4,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
+using Debug = System.Diagnostics.Debug;
 using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
@@ -156,7 +157,9 @@ namespace nadena.dev.ndmf.animator
                 return FromMarker(clip);
             }
 
-            if (cloneContext?.TryGetValue(clip, out VirtualClip clonedClip) == true)
+            // workaround Rider warning bug
+            VirtualClip clonedClip = null;
+            if (cloneContext?.TryGetValue(clip, out clonedClip) == true)
             {
                 return clonedClip;
             }
