@@ -1,4 +1,5 @@
-﻿using nadena.dev.ndmf.animator;
+﻿using System.Collections.Immutable;
+using nadena.dev.ndmf.animator;
 using NUnit.Framework;
 using UnityEditor.Animations;
 
@@ -85,6 +86,88 @@ namespace UnitTests.AnimationServices
             Assert.AreEqual(committedS1, committedS2.transitions[0].destinationState);
             Assert.AreEqual(committedS3, committedS2.transitions[1].destinationState);
             Assert.IsTrue(committedS2.transitions[2].isExit);
+        }
+
+        [Test]
+        public void TestStateMachineTransitions()
+        {
+            var sm1 = new AnimatorStateMachine() { name = "sm1" };
+            var sm2 = new AnimatorStateMachine() { name = "sm2" };
+            var sm3 = new AnimatorStateMachine() { name = "sm3" };
+            
+            var s1 = new AnimatorState() { name = "s1" };
+            var s2 = new AnimatorState() { name = "s2" };
+            
+            sm1.stateMachines = new[]
+            {
+                new ChildAnimatorStateMachine()
+                {
+                    stateMachine = sm2
+                },
+                new ChildAnimatorStateMachine()
+                {
+                    stateMachine = sm3
+                }
+            };
+            sm1.states = new[]
+            {
+                new ChildAnimatorState()
+                {
+                    state = s1
+                },
+                new ChildAnimatorState()
+                {
+                    state = s2
+                }
+            };
+
+            sm1.SetStateMachineTransitions(sm2, new[]
+            {
+                new AnimatorTransition()
+                {
+                    destinationState = s1,
+                    conditions = new AnimatorCondition[0]
+                }
+            });
+            
+            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var clonedSM1 = cloneContext.Clone(sm1);
+            
+            Assert.AreEqual(clonedSM1.StateMachines.Count, 2);
+            var clonedSM2 = clonedSM1.StateMachines[0].StateMachine;
+            var clonedSM3 = clonedSM1.StateMachines[1].StateMachine;
+
+            var clonedS1 = clonedSM1.States[0].State;
+            var clonedS2 = clonedSM1.States[1].State;
+            
+            Assert.AreEqual(clonedSM1.StateMachineTransitions.Count, 2);
+            Assert.AreEqual(clonedS1, clonedSM1.StateMachineTransitions[clonedSM2][0].DestinationState);
+            Assert.AreEqual(0, clonedSM1.StateMachineTransitions[clonedSM3].Count);
+
+            var vt = new VirtualTransition();
+            vt.SetDestination(clonedS2);
+            
+            clonedSM1.StateMachineTransitions = clonedSM1.StateMachineTransitions.SetItem(
+                clonedSM3,
+                ImmutableList<VirtualTransition>.Empty.Add(vt)
+            );
+            
+            var commitContext = new CommitContext();
+            var outSM1 = commitContext.CommitObject(clonedSM1);
+            
+            var outSM2 = outSM1.stateMachines[0].stateMachine;
+            var outSM3 = outSM1.stateMachines[1].stateMachine;
+
+            var outS1 = outSM1.states[0].state;
+            var outS2 = outSM1.states[1].state;
+            
+            var stateTransitions2 = outSM1.GetStateMachineTransitions(outSM2);
+            Assert.AreEqual(stateTransitions2.Length, 1);
+            Assert.AreEqual(outS1, stateTransitions2[0].destinationState);
+            
+            var stateTransitions3 = outSM1.GetStateMachineTransitions(outSM3);
+            Assert.AreEqual(stateTransitions3.Length, 1);
+            Assert.AreEqual(outS2, stateTransitions3[0].destinationState);
         }
     }
 }

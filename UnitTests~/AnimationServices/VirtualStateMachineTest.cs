@@ -101,8 +101,6 @@ namespace UnitTests.AnimationServices
                 virtualState => Assert.AreEqual(new Vector3(1, 2, 3), virtualState.ParentStateMachinePosition)
             );
         }
-        
-        // TODO: object graph tests
     }
     
    

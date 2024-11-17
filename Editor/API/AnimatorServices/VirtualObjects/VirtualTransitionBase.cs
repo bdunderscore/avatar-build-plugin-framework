@@ -8,14 +8,14 @@ namespace nadena.dev.ndmf.animator
 {
     public class VirtualTransitionBase : VirtualNode, ICommitable<AnimatorTransitionBase>, IDisposable
     {
-        private AnimatorTransitionBase _transition;
+        protected AnimatorTransitionBase _transition;
         private ImmutableList<AnimatorCondition> _conditions;
 
         internal VirtualTransitionBase(CloneContext context, AnimatorTransitionBase cloned)
         {
             _transition = cloned;
 
-            context.DeferCall(() =>
+            context?.DeferCall(() =>
             {
                 if (cloned.destinationState != null)
                 {

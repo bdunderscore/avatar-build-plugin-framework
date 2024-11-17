@@ -48,6 +48,13 @@ namespace nadena.dev.ndmf.animator
                     State = context.Clone(s.state),
                     Position = s.position
                 }).ToImmutableList();
+
+                vsm.StateMachineTransitions = stateMachine.stateMachines
+                    .ToImmutableDictionary(
+                        sm => context.Clone(sm.stateMachine),
+                        sm => stateMachine.GetStateMachineTransitions(sm.stateMachine)
+                            .Select(context.Clone).ToImmutableList()
+                    );
             });
 
             return vsm;
@@ -72,6 +79,7 @@ namespace nadena.dev.ndmf.animator
             Behaviours = ImmutableList<StateMachineBehaviour>.Empty;
             StateMachines = ImmutableList<VirtualChildStateMachine>.Empty;
             States = ImmutableList<VirtualChildState>.Empty;
+            StateMachineTransitions = ImmutableDictionary<VirtualStateMachine, ImmutableList<VirtualTransition>>.Empty;
         }
         
         AnimatorStateMachine ICommitable<AnimatorStateMachine>.Prepare(CommitContext context)
@@ -108,6 +116,14 @@ namespace nadena.dev.ndmf.animator
                 .ToArray();
             // DefaultState will be overwritten if we set it too soon; set it last.
             obj.defaultState = context.CommitObject(DefaultState);
+
+            foreach (var (sm, transitions) in StateMachineTransitions)
+            {
+                obj.SetStateMachineTransitions(
+                    context.CommitObject(sm),
+                    transitions.Select(t => (AnimatorTransition)context.CommitObject(t)).ToArray()
+                );
+            }
         }
 
         private string _name;
@@ -188,6 +204,14 @@ namespace nadena.dev.ndmf.animator
         {
             get => _states;
             set => _states = I(value);
+        }
+
+        private ImmutableDictionary<VirtualStateMachine, ImmutableList<VirtualTransition>> _stateMachineTransitions;
+
+        public ImmutableDictionary<VirtualStateMachine, ImmutableList<VirtualTransition>> StateMachineTransitions
+        {
+            get => _stateMachineTransitions;
+            set => _stateMachineTransitions = I(value);
         }
 
         private VirtualState _defaultState;

@@ -8,6 +8,10 @@ namespace nadena.dev.ndmf.animator
         {
         }
 
+        public VirtualTransition() : base(null, new AnimatorTransition())
+        {
+        }
+
         public static VirtualTransition Clone(
             CloneContext context,
             AnimatorTransition transition

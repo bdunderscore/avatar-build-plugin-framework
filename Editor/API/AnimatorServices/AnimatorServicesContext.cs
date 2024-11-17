@@ -57,7 +57,7 @@ namespace nadena.dev.ndmf.animator
 
                 if (state.virtualController == null)
                 {
-                    state.virtualController = VirtualAnimatorController.Clone(_cloneContext, state.originalController);
+                    state.virtualController = _cloneContext.Clone(state.originalController);
                 }
 
                 return state.virtualController;

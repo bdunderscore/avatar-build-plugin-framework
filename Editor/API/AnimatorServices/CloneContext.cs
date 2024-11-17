@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using UnityEditor.Animations;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -82,7 +83,7 @@ namespace nadena.dev.ndmf.animator
             {
                 _cloneDepth++;
 
-                if (key == null) return null;
+                if (key == null || (key is Object obj && obj == null)) return null;
                 if (TryGetValue(key, out U value)) return value;
                 value = clone(this, key);
                 _clones[key] = value;
