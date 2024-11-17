@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -13,7 +12,7 @@ using Object = UnityEngine.Object;
 namespace nadena.dev.ndmf.animator
 {
     [PublicAPI]
-    public class VirtualState : VirtualNode, ICommitable<AnimatorState>, IDisposable
+    public sealed class VirtualState : VirtualNode, ICommitable<AnimatorState>
     {
         private AnimatorState _state;
 
@@ -25,7 +24,7 @@ namespace nadena.dev.ndmf.animator
             set => _behaviours = I(value);
         }
 
-        public static VirtualState Clone(
+        internal static VirtualState Clone(
             CloneContext context,
             AnimatorState state
         )
@@ -39,7 +38,7 @@ namespace nadena.dev.ndmf.animator
             return new VirtualState(context, clonedState);
         }
 
-        public static VirtualState Create(CloneContext _, string name = "unnamed")
+        public static VirtualState Create(string name = "unnamed")
         {
             return new VirtualState { Name = name };
         }
@@ -190,18 +189,6 @@ namespace nadena.dev.ndmf.animator
         {
             obj.behaviours = Behaviours.ToArray();
             obj.transitions = Transitions.Select(t => (AnimatorStateTransition)context.CommitObject(t)).ToArray();
-        }
-        
-        void IDisposable.Dispose()
-        {
-            foreach (var behaviour in Behaviours)
-            {
-                Object.DestroyImmediate(behaviour);
-            }
-
-            Behaviours = Behaviours.Clear();
-            
-            if (_state != null) Object.DestroyImmediate(_state);
         }
 
         public override string ToString()

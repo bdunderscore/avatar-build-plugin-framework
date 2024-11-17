@@ -1,18 +1,20 @@
 ﻿#nullable enable
 
 using System;
+using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
 {
-    public abstract class VirtualMotion : VirtualNode, ICommitable<Motion>, IDisposable
+    [PublicAPI]
+    public abstract class VirtualMotion : VirtualNode, ICommitable<Motion>
     {
         internal VirtualMotion()
         {
         }
 
-        public static VirtualMotion Clone(
+        internal static VirtualMotion Clone(
             CloneContext context,
             Motion motion
         )
@@ -42,7 +44,5 @@ namespace nadena.dev.ndmf.animator
         {
             Commit(context, obj);
         }
-
-        public abstract void Dispose();
     }
 }

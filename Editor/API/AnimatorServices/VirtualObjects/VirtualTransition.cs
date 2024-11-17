@@ -1,20 +1,23 @@
 ﻿#nullable enable
 
+using JetBrains.Annotations;
 using UnityEditor.Animations;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class VirtualTransition : VirtualTransitionBase
+    [PublicAPI]
+    public sealed class VirtualTransition : VirtualTransitionBase
     {
         internal VirtualTransition(CloneContext context, AnimatorTransitionBase cloned) : base(context, cloned)
         {
         }
 
-        public VirtualTransition() : base(null, new AnimatorTransition())
+        public static VirtualTransition Create()
         {
+            return new VirtualTransition(null, new AnimatorTransition());
         }
 
-        public static VirtualTransition Clone(
+        internal static VirtualTransition Clone(
             CloneContext context,
             AnimatorTransition transition
         )

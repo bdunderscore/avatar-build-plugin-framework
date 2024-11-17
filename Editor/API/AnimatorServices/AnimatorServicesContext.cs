@@ -2,11 +2,13 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 
 namespace nadena.dev.ndmf.animator
 {
+    [PublicAPI]
     public sealed class AnimatorServicesContext : IExtensionContext
     {
         private class LayerState

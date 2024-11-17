@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -13,12 +12,12 @@ namespace nadena.dev.ndmf.animator
     /// <summary>
     ///     Represents a state machine in a virtual layer.
     /// </summary>
-    public class VirtualStateMachine : VirtualNode, ICommitable<AnimatorStateMachine>, IDisposable
+    public sealed class VirtualStateMachine : VirtualNode, ICommitable<AnimatorStateMachine>
     {
         private readonly CloneContext _context;
         private AnimatorStateMachine _stateMachine;
 
-        public static VirtualStateMachine Clone(CloneContext context, AnimatorStateMachine stateMachine)
+        internal static VirtualStateMachine Clone(CloneContext context, AnimatorStateMachine stateMachine)
         {
             if (context.TryGetValue(stateMachine, out VirtualStateMachine? clone)) return clone!;
 
@@ -243,14 +242,6 @@ namespace nadena.dev.ndmf.animator
             public Vector3 Position;
         }
 
-        public void Dispose()
-        {
-            if (_stateMachine != null)
-            {
-                Object.DestroyImmediate(_stateMachine);
-            }
-        }
-
         protected override IEnumerable<VirtualNode> _EnumerateChildren()
         {
             foreach (var sm in StateMachines)
@@ -278,7 +269,7 @@ namespace nadena.dev.ndmf.animator
 
         public VirtualState AddState(string name, VirtualMotion? motion = null, Vector3? position = null)
         {
-            var state = VirtualState.Create(_context, name);
+            var state = VirtualState.Create(name);
 
             state.Motion = motion;
             var childState = new VirtualChildState

@@ -7,7 +7,7 @@ using VRC.SDK3.Avatars.Components;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class VRChatPlatformAnimatorBindings : IPlatformAnimatorBindings
+    public sealed class VRChatPlatformAnimatorBindings : IPlatformAnimatorBindings
     {
         private const string SAMPLE_PATH_PACKAGE =
             "Packages/com.vrchat.avatars/Samples/AV3 Demo Assets/Animation/Controllers";

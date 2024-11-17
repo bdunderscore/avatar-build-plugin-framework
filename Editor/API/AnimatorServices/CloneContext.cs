@@ -4,16 +4,18 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class CloneContext
+    [PublicAPI]
+    public sealed class CloneContext
     {
         public IPlatformAnimatorBindings PlatformBindings { get; private set; }
-        private readonly Dictionary<object, IDisposable> _clones = new();
+        private readonly Dictionary<object, object> _clones = new();
 
         private int _cloneDepth, _nextVirtualLayer, _virtualLayerBase, _maxMappedPhysLayer;
         private readonly Queue<Action> _deferredCalls = new();
@@ -65,7 +67,7 @@ namespace nadena.dev.ndmf.animator
             return clip;
         }
 
-        public bool TryGetValue<T, U>(T key, out U? value) where U : IDisposable
+        internal bool TryGetValue<T, U>(T key, out U? value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
             
@@ -77,13 +79,7 @@ namespace nadena.dev.ndmf.animator
             return rv;
         }
 
-        public void Add<T, U>(T key, U value) where U: IDisposable
-        {
-            if (key == null) throw new ArgumentNullException(nameof(key));
-            _clones.Add(key, value);
-        }
-
-        private U? GetOrClone<T, U>(T? key, Func<CloneContext, T, U> clone) where U : class, IDisposable
+        private U? GetOrClone<T, U>(T? key, Func<CloneContext, T, U> clone) where U : class
         {
             try
             {
@@ -141,7 +137,7 @@ namespace nadena.dev.ndmf.animator
         public VirtualLayer? Clone(AnimatorControllerLayer? layer, int index)
         {
             using var _ = new ProfilerScope("Clone Animator Layer");
-            return GetOrClone(layer, (ctx, obj) => VirtualLayer.Clone(ctx, obj, index)!);
+            return GetOrClone(layer, (ctx, obj) => VirtualLayer.Clone(ctx, obj, index));
         }
 
         [return: NotNullIfNotNull("stateMachine")]

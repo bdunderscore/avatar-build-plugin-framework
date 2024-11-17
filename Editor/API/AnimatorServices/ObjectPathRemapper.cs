@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using nadena.dev.ndmf.runtime;
 using UnityEngine;
 
@@ -25,7 +26,8 @@ namespace nadena.dev.ndmf.animator
     ///     Note that it's possible that these paths may collide with paths that _previously_ existed, so it's still
     ///     recommended to use `GetVirtualPathForObject` to ensure that the path is unique.
     /// </summary>
-    public class ObjectPathRemapper
+    [PublicAPI]
+    public sealed class ObjectPathRemapper
     {
         private readonly Transform _root;
         private readonly Dictionary<Transform, List<string>> _objectToOriginalPaths = new();

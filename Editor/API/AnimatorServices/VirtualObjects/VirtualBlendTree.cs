@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
 {
-    public class VirtualBlendTree : VirtualMotion
+    [PublicAPI]
+    public sealed class VirtualBlendTree : VirtualMotion
     {
         private readonly BlendTree _tree;
 
@@ -23,12 +25,17 @@ namespace nadena.dev.ndmf.animator
             public float TimeScale = 1.0f;
         }
 
-        private VirtualBlendTree(CloneContext context, BlendTree cloned)
+        public static VirtualBlendTree Create(string name = "(unnamed)")
+        {
+            return new VirtualBlendTree(null, new BlendTree { name = name });
+        }
+
+        private VirtualBlendTree(CloneContext? context, BlendTree cloned)
         {
             _tree = cloned;
             _children = ImmutableList<VirtualChildMotion>.Empty;
 
-            context.DeferCall(() =>
+            context?.DeferCall(() =>
             {
                 Children = _tree.children.Select(m => new VirtualChildMotion
                 {
@@ -130,11 +137,6 @@ namespace nadena.dev.ndmf.animator
                     timeScale = c.TimeScale
                 };
             }).ToArray();
-        }
-
-        public override void Dispose()
-        {
-            Object.DestroyImmediate(_tree);
         }
 
         protected override IEnumerable<VirtualNode> _EnumerateChildren()

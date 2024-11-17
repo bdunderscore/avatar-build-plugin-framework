@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
 
@@ -20,7 +21,8 @@ namespace nadena.dev.ndmf.animator
     ///     - AnimationClip
     ///     - Any state behaviors attached to the animator controller
     /// </summary>
-    public class VirtualAnimatorController : VirtualNode, ICommitable<AnimatorController>, IDisposable
+    [PublicAPI]
+    public sealed class VirtualAnimatorController : VirtualNode, ICommitable<AnimatorController>
     {
         private readonly CloneContext _context;
         public string Name { get; set; }
@@ -40,7 +42,12 @@ namespace nadena.dev.ndmf.animator
             public List<VirtualLayer> Layers;
         }
 
-        public VirtualAnimatorController(CloneContext context, string name = "")
+        public static VirtualAnimatorController Create(CloneContext context, string name = "(unnamed)")
+        {
+            return new VirtualAnimatorController(context, name);
+        }
+
+        private VirtualAnimatorController(CloneContext context, string name)
         {
             _context = context;
             _parameters = ImmutableDictionary<string, AnimatorControllerParameter>.Empty;
@@ -134,11 +141,6 @@ namespace nadena.dev.ndmf.animator
         void ICommitable<AnimatorController>.Commit(CommitContext context, AnimatorController obj)
         {
             obj.layers = Layers.Select(context.CommitObject).ToArray();
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
         }
 
         protected override IEnumerable<VirtualNode> _EnumerateChildren()

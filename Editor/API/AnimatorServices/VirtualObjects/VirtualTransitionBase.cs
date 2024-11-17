@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 namespace nadena.dev.ndmf.animator
 {
     [PublicAPI]
-    public class VirtualTransitionBase : VirtualNode, ICommitable<AnimatorTransitionBase>, IDisposable
+    public class VirtualTransitionBase : VirtualNode, ICommitable<AnimatorTransitionBase>
     {
         protected AnimatorTransitionBase _transition;
 
@@ -159,11 +159,6 @@ namespace nadena.dev.ndmf.animator
                 obj.destinationState = null;
                 obj.destinationStateMachine = null;
             }
-        }
-
-        public void Dispose()
-        {
-            if (_transition != null) Object.DestroyImmediate(_transition);
         }
 
         protected override IEnumerable<VirtualNode> _EnumerateChildren()

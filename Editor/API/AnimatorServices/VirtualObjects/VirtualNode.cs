@@ -2,10 +2,15 @@
 
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace nadena.dev.ndmf.animator
 {
-    [ExcludeFromDocs]
+    /// <summary>
+    ///     Base class for all virtual animation nodes. Contains common functionality for cache invalidation.
+    ///     Generally, external libraries should not use this class directly.
+    /// </summary>
+    [PublicAPI]
     public abstract class VirtualNode
     {
         private Action? _lastCacheObserver;

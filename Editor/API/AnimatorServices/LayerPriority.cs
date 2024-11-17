@@ -1,9 +1,11 @@
 ﻿#nullable enable
 
 using System;
+using JetBrains.Annotations;
 
 namespace nadena.dev.ndmf.animator
 {
+    [PublicAPI]
     public struct LayerPriority : IComparable<LayerPriority>, IEquatable<LayerPriority>
     {
         public static LayerPriority Default = new();

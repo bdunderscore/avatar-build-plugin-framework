@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -15,7 +14,7 @@ namespace nadena.dev.ndmf.animator
     ///     A layer within a VirtualAnimatorController
     /// </summary>
     [PublicAPI]
-    public class VirtualLayer : VirtualNode, ICommitable<AnimatorControllerLayer>, IDisposable
+    public sealed class VirtualLayer : VirtualNode, ICommitable<AnimatorControllerLayer>
     {
         /// <summary>
         ///     Returns a "virtual layer index" which can be used to map to the actual layer index in the animator controller,
@@ -200,11 +199,6 @@ namespace nadena.dev.ndmf.animator
                     context.CommitObject(kvp.Key),
                     kvp.Value.Cast<ScriptableObject>().ToArray()
                 )));
-        }
-
-        public void Dispose()
-        {
-            // no-op
         }
 
         public override string ToString()

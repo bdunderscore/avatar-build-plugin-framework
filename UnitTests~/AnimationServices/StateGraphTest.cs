@@ -144,7 +144,7 @@ namespace UnitTests.AnimationServices
             Assert.AreEqual(clonedS1, clonedSM1.StateMachineTransitions[clonedSM2][0].DestinationState);
             Assert.AreEqual(0, clonedSM1.StateMachineTransitions[clonedSM3].Count);
 
-            var vt = new VirtualTransition();
+            var vt = VirtualTransition.Create();
             vt.SetDestination(clonedS2);
             
             clonedSM1.StateMachineTransitions = clonedSM1.StateMachineTransitions.SetItem(

@@ -16,7 +16,7 @@ namespace nadena.dev.ndmf.animator
     ///     clips, and in particular provides helpers for common operations (e.g. rewriting all paths in a clip).
     /// </summary>
     [PublicAPI]
-    public class VirtualClip : VirtualMotion, IDisposable
+    public sealed class VirtualClip : VirtualMotion
     {
         private AnimationClip _clip;
 
@@ -463,11 +463,6 @@ namespace nadena.dev.ndmf.animator
         public void SetObjectCurve(string path, Type type, string prop, ObjectReferenceKeyframe[] curve)
         {
             SetObjectCurve(EditorCurveBinding.PPtrCurve(path, type, prop), curve);
-        }
-
-        public override void Dispose()
-        {
-            if (_clip != null) Object.DestroyImmediate(_clip);
         }
     }
 }

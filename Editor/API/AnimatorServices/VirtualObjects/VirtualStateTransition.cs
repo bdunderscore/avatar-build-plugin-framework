@@ -6,7 +6,7 @@ using UnityEditor.Animations;
 namespace nadena.dev.ndmf.animator
 {
     [PublicAPI]
-    public class VirtualStateTransition : VirtualTransitionBase
+    public sealed class VirtualStateTransition : VirtualTransitionBase
     {
         private readonly AnimatorStateTransition _stateTransition;
 
@@ -15,7 +15,12 @@ namespace nadena.dev.ndmf.animator
             _stateTransition = cloned;
         }
 
-        public VirtualStateTransition() : base(null, new AnimatorStateTransition())
+        public static VirtualStateTransition Create()
+        {
+            return new VirtualStateTransition(null, new AnimatorStateTransition());
+        }
+
+        private VirtualStateTransition() : base(null, new AnimatorStateTransition())
         {
             _stateTransition = (AnimatorStateTransition)_transition;
         }
