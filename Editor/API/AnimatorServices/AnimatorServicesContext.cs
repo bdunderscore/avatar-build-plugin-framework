@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
+#if NDMF_VRCSDK3_AVATARS
 using VRC.SDK3.Avatars.Components;
+#endif
 
 namespace nadena.dev.ndmf.animator
 {
@@ -36,6 +38,7 @@ namespace nadena.dev.ndmf.animator
         {
             var root = context.AvatarRootObject;
 
+            #if NDMF_VRCSDK3_AVATARS
             if (root.TryGetComponent<VRCAvatarDescriptor>(out _))
             {
                 _platformBindings = new VRChatPlatformAnimatorBindings();
@@ -44,6 +47,9 @@ namespace nadena.dev.ndmf.animator
             {
                 _platformBindings = new GenericPlatformAnimatorBindings();
             }
+            #else
+            _platformBindings = new GenericPlatformAnimatorBindings();
+            #endif
 
             _cloneContext = new CloneContext(_platformBindings);
 
