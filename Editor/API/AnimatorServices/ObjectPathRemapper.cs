@@ -34,7 +34,7 @@ namespace nadena.dev.ndmf.animator
         private readonly Dictionary<string, Transform> _pathToObject = new();
 
         private bool _cacheValid;
-        private readonly Dictionary<string, string> _originalToMappedPath = new();
+        private Dictionary<string, string?> _originalToMappedPath = new();
 
         internal ObjectPathRemapper(Transform root)
         {
@@ -42,11 +42,30 @@ namespace nadena.dev.ndmf.animator
             RecordObjectTree(root);
         }
 
-        public void ApplyChanges(AnimationIndex index)
+        /// <summary>
+        ///     Clears the path remapping cache. This should be called after making changes to the hierarchy,
+        ///     such as moving objects around.
+        /// </summary>
+        public void ClearCache()
         {
+            _cacheValid = false;
+        }
+
+        /// <summary>
+        ///     Returns a dictionary mapping from virtual paths (ie - those currently in use in animations) to the corresponding
+        ///     object's current paths.
+        ///     Deleted objects are represented by a null value.
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, string?> GetVirtualToRealPathMap()
+        {
+            ClearCache();
             UpdateCache();
 
-            index.RewritePaths(_originalToMappedPath);
+            var result = _originalToMappedPath;
+            _originalToMappedPath = new Dictionary<string, string?>();
+
+            return result;
         }
 
         private void UpdateCache()
@@ -57,17 +76,20 @@ namespace nadena.dev.ndmf.animator
 
             foreach (var kvp in _objectToOriginalPaths)
             {
-                var virtualPath = GetVirtualPathForObject(kvp.Key);
-
-                if (virtualPath == null) continue;
+                var realPath = kvp.Key != null ? RuntimeUtil.RelativePath(_root, kvp.Key) : null;
                 
                 foreach (var path in kvp.Value)
                 {
-                    _originalToMappedPath[path] = virtualPath;
+                    if (path == "") continue;
+                    _originalToMappedPath[path] = realPath;
                 }
             }
         }
 
+        /// <summary>
+        ///     Ensures all objects in this object and its children are recorded in the object path mapper.
+        /// </summary>
+        /// <param name="subtree"></param>
         public void RecordObjectTree(Transform subtree)
         {
             GetVirtualPathForObject(subtree);
@@ -78,17 +100,37 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
+        /// <summary>
+        ///     Returns the GameObject corresponding to an animation path, if any. This is based on where the object
+        ///     was located at the time it was first discovered, _not_ its current location.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public GameObject? GetObjectForPath(string path)
         {
             var xform = _pathToObject.GetValueOrDefault(path);
             return xform ? xform.gameObject : null;
         }
 
+        /// <summary>
+        ///     Returns a virtual path for the given GameObject. For most objects, this will be their actual path; however,
+        ///     if that path is unusable (e.g. another object was previously at that path), a new path will be generated
+        ///     instead.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public string? GetVirtualPathForObject(GameObject obj)
         {
             return GetVirtualPathForObject(obj.transform);
         }
 
+        /// <summary>
+        ///     Returns a virtual path for the given Transform. For most objects, this will be their actual path; however,
+        ///     if that path is unusable (e.g. another object was previously at that path), a new path will be generated
+        ///     instead.
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
         public string? GetVirtualPathForObject(Transform t)
         {
             if (_objectToOriginalPaths.TryGetValue(t, out var paths))
@@ -111,18 +153,30 @@ namespace nadena.dev.ndmf.animator
             return path;
         }
 
+        /// <summary>
+        ///     Replaces all references to `old` with `newObject`.
+        /// </summary>
+        /// <param name="old"></param>
+        /// <param name="newObject"></param>
         public void ReplaceObject(GameObject old, GameObject newObject)
         {
             ReplaceObject(old.transform, newObject.transform);
         }
 
+        /// <summary>
+        ///     Replaces all references to `old` with `newObject`.
+        /// </summary>
+        /// <param name="old"></param>
+        /// <param name="newObject"></param>
         public void ReplaceObject(Transform old, Transform newObject)
         {
             if (!_objectToOriginalPaths.TryGetValue(old, out var paths)) return;
 
-            if (_objectToOriginalPaths.ContainsKey(newObject))
+            ClearCache();
+
+            if (_objectToOriginalPaths.TryGetValue(newObject, out var originalPaths))
             {
-                _objectToOriginalPaths[newObject].AddRange(paths);
+                originalPaths.AddRange(paths);
             }
             else
             {
@@ -134,13 +188,6 @@ namespace nadena.dev.ndmf.animator
             {
                 _pathToObject[path] = newObject;
             }
-        }
-
-        public string MapPath(string originalPath)
-        {
-            UpdateCache();
-
-            return _originalToMappedPath.GetValueOrDefault(originalPath, originalPath);
         }
     }
 }
