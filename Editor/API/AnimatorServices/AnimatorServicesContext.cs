@@ -51,7 +51,8 @@ namespace nadena.dev.ndmf.animator
             {
                 _layerStates[type] = new LayerState(controller);
 
-                // TEMP - force all layers to be processed
+                // Force all layers to be processed, for now. This avoids compatibility issues with NDMF
+                // plugins which assume that all layers have been cloned after MA runs.
                 _ = this[type];
             }
         }

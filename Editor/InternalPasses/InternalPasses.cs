@@ -1,6 +1,5 @@
 ﻿#region
 
-using nadena.dev.ndmf.animator;
 using nadena.dev.ndmf.builtin;
 using nadena.dev.ndmf.runtime;
 
@@ -19,10 +18,6 @@ namespace nadena.dev.ndmf
             InPhase(BuildPhase.Resolving)
                 .Run(RemoveMissingScriptComponents.Instance)
                 .Then.Run(RemoveEditorOnlyPass.Instance);
-
-
-            InPhase(BuildPhase.Optimizing)
-                .WithRequiredExtension(typeof(AnimatorServicesContext), seq => seq.Run("test", _ => { }));
         }
     }
 }
