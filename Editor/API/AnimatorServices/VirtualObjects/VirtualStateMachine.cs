@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor.Animations;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -30,7 +29,7 @@ namespace nadena.dev.ndmf.animator
                     .Where(t => t != null)
                     .Select(context.Clone)
                     .ToImmutableList()!;
-                vsm.Behaviours = stateMachine.behaviours.Select(Object.Instantiate).ToImmutableList();
+                vsm.Behaviours = stateMachine.behaviours.Select(context.ImportBehaviour).ToImmutableList();
                 vsm.DefaultState = context.Clone(stateMachine.defaultState);
                 vsm.EntryPosition = stateMachine.entryPosition;
                 vsm.EntryTransitions = stateMachine.entryTransitions
@@ -102,7 +101,7 @@ namespace nadena.dev.ndmf.animator
             obj.name = Name;
             obj.anyStatePosition = AnyStatePosition;
 
-            obj.behaviours = Behaviours.ToArray();
+            obj.behaviours = Behaviours.Select(context.CommitBehaviour).ToArray();
             obj.entryPosition = EntryPosition;
             obj.exitPosition = ExitPosition;
             obj.parentStateMachinePosition = ParentStateMachinePosition;

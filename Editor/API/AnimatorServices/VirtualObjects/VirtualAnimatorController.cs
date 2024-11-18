@@ -132,6 +132,7 @@ namespace nadena.dev.ndmf.animator
 
             foreach (var (layer, index) in Layers.Select((l, i) => (l, i)))
             {
+                context.RegisterVirtualLayerMapping(layer, layer.VirtualLayerIndex);
                 context.RegisterPhysicalLayerMapping(index, layer);
             }
 

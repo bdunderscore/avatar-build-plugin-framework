@@ -176,9 +176,7 @@ namespace nadena.dev.ndmf.animator
                 iKPass = IKPass,
                 syncedLayerAffectsTiming = SyncedLayerAffectsTiming
             };
-
-            context.RegisterVirtualLayerMapping(this, VirtualLayerIndex);
-
+            
             return layer;
         }
 

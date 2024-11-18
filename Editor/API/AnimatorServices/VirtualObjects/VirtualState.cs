@@ -7,7 +7,6 @@ using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -54,8 +53,7 @@ namespace nadena.dev.ndmf.animator
         {
             _state = clonedState;
 
-            // TODO: Should we rewrite any internal properties of these StateMachineBehaviours?
-            Behaviours = _state.behaviours.Select(b => Object.Instantiate(b)).ToImmutableList();
+            Behaviours = _state.behaviours.Select(context.ImportBehaviour).ToImmutableList();
 
             _transitions = ImmutableList<VirtualStateTransition>.Empty;
             context.DeferCall(() =>
@@ -187,7 +185,7 @@ namespace nadena.dev.ndmf.animator
 
         void ICommitable<AnimatorState>.Commit(CommitContext context, AnimatorState obj)
         {
-            obj.behaviours = Behaviours.ToArray();
+            obj.behaviours = Behaviours.Select(context.CommitBehaviour).ToArray();
             obj.transitions = Transitions.Select(t => (AnimatorStateTransition)context.CommitObject(t)).ToArray();
         }
 

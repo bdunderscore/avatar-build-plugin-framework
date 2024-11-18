@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -27,6 +28,9 @@ namespace nadena.dev.ndmf.animator
         // initialized on activate
         private IPlatformAnimatorBindings? _platformBindings;
         private CloneContext? _cloneContext;
+
+        public CloneContext CloneContext =>
+            _cloneContext ?? throw new InvalidOperationException("Extension context not initialized");
 
         public void OnActivate(BuildContext context)
         {
@@ -63,6 +67,8 @@ namespace nadena.dev.ndmf.animator
 
                 if (state.VirtualController == null)
                 {
+                    using var _ = _cloneContext!.PushActiveInnateKey(key);
+                    
                     state.VirtualController = _cloneContext!.Clone(state.OriginalController);
                 }
 
@@ -78,13 +84,16 @@ namespace nadena.dev.ndmf.animator
         {
             var root = context.AvatarRootObject;
 
-            var commitContext = new CommitContext();
+            var commitContext = new CommitContext(_cloneContext!.PlatformBindings);
 
             var controllers = _layerStates.Where(kvp => kvp.Value.VirtualController != null)
                 .ToDictionary(
-                    k => k.Key,
-                    v => (RuntimeAnimatorController)commitContext.CommitObject(v.Value.VirtualController!)
-                );
+                    kv => kv.Key,
+                    kv =>
+                    {
+                        commitContext.ActiveInnateLayerKey = kv.Key;
+                        return (RuntimeAnimatorController)commitContext.CommitObject(kv.Value.VirtualController!);
+                    });
 
             _platformBindings!.CommitInnateControllers(root, controllers);
         }

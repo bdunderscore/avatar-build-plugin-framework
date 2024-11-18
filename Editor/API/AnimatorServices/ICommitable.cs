@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace nadena.dev.ndmf.animator
@@ -23,12 +24,26 @@ namespace nadena.dev.ndmf.animator
         void Commit(CommitContext context, T obj);
     }
 
-    internal class CommitContext
+    [PublicAPI]
+    public sealed class CommitContext
     {
+        private readonly IPlatformAnimatorBindings _platform;
+        
         private readonly Dictionary<object, object> _commitCache = new();
         private readonly Dictionary<int, VirtualLayer> _virtIndexToVirtLayer = new();
         private readonly Dictionary<VirtualLayer, int> _virtLayerToPhysIndex = new();
 
+        public object? ActiveInnateLayerKey { get; internal set; }
+
+        internal CommitContext() : this(new GenericPlatformAnimatorBindings())
+        {
+        }
+
+        public CommitContext(IPlatformAnimatorBindings platform)
+        {
+            _platform = platform;
+        }
+        
         [return: NotNullIfNotNull("obj")]
         internal R? CommitObject<R>(ICommitable<R>? obj) where R : class
         {
@@ -43,12 +58,18 @@ namespace nadena.dev.ndmf.animator
             return resultObj;
         }
 
-        public void RegisterVirtualLayerMapping(VirtualLayer virtualLayer, int virtualLayerIndex)
+        internal StateMachineBehaviour CommitBehaviour(StateMachineBehaviour behaviour)
+        {
+            _platform.CommitStateBehaviour(this, behaviour);
+            return behaviour;
+        }
+
+        internal void RegisterVirtualLayerMapping(VirtualLayer virtualLayer, int virtualLayerIndex)
         {
             _virtIndexToVirtLayer[virtualLayerIndex] = virtualLayer;
         }
 
-        public void RegisterPhysicalLayerMapping(int physicalLayerIndex, VirtualLayer virtualLayer)
+        internal void RegisterPhysicalLayerMapping(int physicalLayerIndex, VirtualLayer virtualLayer)
         {
             _virtLayerToPhysIndex[virtualLayer] = physicalLayerIndex;
         }

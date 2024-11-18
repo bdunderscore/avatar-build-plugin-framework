@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -41,7 +43,7 @@ namespace nadena.dev.ndmf.animator
         /// Invoked after a StateMachineBehavior is cloned, to allow for any platform-specific modifications.
         /// For example, in VRChat, this is used to replace the layer indexes with virtual layer indexes in the
         /// VRChatAnimatorLayerControl behavior.
-        ///
+        /// 
         /// Note that, if we're re-activating the virtual animator controller after committing, this will be re-invoked
         /// with the same behaviour it had previously cloned. This allows for again converting between virtual and
         /// physical layer indexes.
@@ -59,7 +61,7 @@ namespace nadena.dev.ndmf.animator
         /// </summary>
         /// <param name="context"></param>
         /// <param name="behaviour"></param>
-        void CommitStateBehaviour(CloneContext context, StateMachineBehaviour behaviour)
+        void CommitStateBehaviour(CommitContext context, StateMachineBehaviour behaviour)
         {
         }
     }

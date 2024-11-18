@@ -20,8 +20,24 @@ namespace nadena.dev.ndmf.animator
         private int _cloneDepth, _nextVirtualLayer, _virtualLayerBase, _maxMappedPhysLayer;
         private readonly Queue<Action> _deferredCalls = new();
 
-        private ImmutableList<AnimatorOverrideController> _overrideControllers =
-            ImmutableList<AnimatorOverrideController>.Empty;
+        private struct DynamicScopeState
+        {
+            public ImmutableList<AnimatorOverrideController> OverrideControllers;
+            public object? InnateAnimatorKey;
+        }
+
+        private DynamicScopeState _curDynScope = new()
+        {
+            OverrideControllers = ImmutableList<AnimatorOverrideController>.Empty
+        };
+
+        private ImmutableList<AnimatorOverrideController> OverrideControllers => _curDynScope.OverrideControllers;
+
+        /// <summary>
+        ///     When cloning an innate animator, this property will be set to the key of the animator.
+        ///     In the case of VRChat, this contains the layer type while cloning.
+        /// </summary>
+        public object? ActiveInnateLayerKey => _curDynScope.InnateAnimatorKey;
 
         public CloneContext(IPlatformAnimatorBindings platformBindings)
         {
@@ -29,27 +45,39 @@ namespace nadena.dev.ndmf.animator
             _nextVirtualLayer = _virtualLayerBase = 0x10_0000;
         }
 
-        private class OverrideControllerScope : IDisposable
+        private class DynamicScope : IDisposable
         {
             private readonly CloneContext _context;
-            private readonly ImmutableList<AnimatorOverrideController> _priorStack;
+            private readonly DynamicScopeState _priorStack;
 
-            public OverrideControllerScope(CloneContext context, AnimatorOverrideController controller)
+            public DynamicScope(CloneContext context)
             {
                 _context = context;
-                _priorStack = context._overrideControllers;
-                _context._overrideControllers = _priorStack.Add(controller);
+                _priorStack = context._curDynScope;
             }
 
             public void Dispose()
             {
-                _context._overrideControllers = _priorStack;
+                _context._curDynScope = _priorStack;
             }
         }
 
         internal IDisposable PushOverrideController(AnimatorOverrideController controller)
         {
-            return new OverrideControllerScope(this, controller);
+            var scope = new DynamicScope(this);
+
+            _curDynScope.OverrideControllers = _curDynScope.OverrideControllers.Add(controller);
+
+            return scope;
+        }
+
+        internal IDisposable PushActiveInnateKey(object key)
+        {
+            var scope = new DynamicScope(this);
+
+            _curDynScope.InnateAnimatorKey = key;
+
+            return scope;
         }
 
         /// <summary>
@@ -59,7 +87,7 @@ namespace nadena.dev.ndmf.animator
         /// <returns></returns>
         public AnimationClip MapClipOnClone(AnimationClip clip)
         {
-            foreach (var controller in _overrideControllers)
+            foreach (var controller in OverrideControllers)
             {
                 clip = controller[clip];
             }
@@ -126,6 +154,13 @@ namespace nadena.dev.ndmf.animator
             return _nextVirtualLayer++;
         }
 
+        internal StateMachineBehaviour ImportBehaviour(StateMachineBehaviour behaviour)
+        {
+            behaviour = Object.Instantiate(behaviour);
+            PlatformBindings.VirtualizeStateBehaviour(this, behaviour);
+            return behaviour;
+        }
+
         [return: NotNullIfNotNull("controller")]
         public VirtualAnimatorController? Clone(RuntimeAnimatorController? controller)
         {
@@ -184,29 +219,23 @@ namespace nadena.dev.ndmf.animator
 
         public void DeferCall(Action action)
         {
-            var overrideStack = _overrideControllers;
+            var overrideStack = _curDynScope;
             // Preserve ambient AnimatorOverrideController context when we defer calls
             if (_cloneDepth > 0)
                 _deferredCalls.Enqueue(() =>
                 {
-                    var priorStack = _overrideControllers;
-                    _overrideControllers = overrideStack;
-                    try
-                    {
-                        action();
-                    }
-                    finally
-                    {
-                        _overrideControllers = priorStack;
-                    }
+                    using var _ = new DynamicScope(this);
+                    _curDynScope = overrideStack;
+
+                    action();
                 });
             else action();
         }
 
-        public int CloneSourceToVirtualLayerIndex(int layerSyncedLayerIndex)
+        public int CloneSourceToVirtualLayerIndex(int layerIndex)
         {
-            return layerSyncedLayerIndex < _maxMappedPhysLayer && layerSyncedLayerIndex >= 0
-                ? layerSyncedLayerIndex + _virtualLayerBase
+            return layerIndex < _maxMappedPhysLayer && layerIndex >= 0
+                ? layerIndex + _virtualLayerBase
                 : -1;
         }
     }
