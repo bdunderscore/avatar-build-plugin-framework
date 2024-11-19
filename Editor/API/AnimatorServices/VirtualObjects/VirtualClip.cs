@@ -250,7 +250,7 @@ namespace nadena.dev.ndmf.animator
         ///     it is indeterminate which binding will be preserved. If null is returned, the binding will be deleted.
         /// </summary>
         /// <param name="pathEditor"></param>
-        public void EditPaths(Func<string, string> pathEditor)
+        public void EditPaths(Func<string, string?> pathEditor)
         {
             if (IsMarkerClip) return;
 

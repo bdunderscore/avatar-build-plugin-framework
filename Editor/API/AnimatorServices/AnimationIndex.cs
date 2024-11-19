@@ -9,24 +9,41 @@ namespace nadena.dev.ndmf.animator
 {
     public sealed class AnimationIndex
     {
-        private readonly List<VirtualAnimatorController> _controllers;
+        private readonly Func<IEnumerable<VirtualAnimatorController>> _getControllers;
+        private readonly Func<long> _getInvalidationToken;
+
+        private long _lastInvalidationToken;
 
         private readonly Action _invalidateAction;
         private bool _isValid;
+
+        private bool IsValid => _isValid && _lastInvalidationToken == _getInvalidationToken();
 
         private readonly Dictionary<string, HashSet<VirtualClip>> _objectPathToClip = new();
         private readonly Dictionary<EditorCurveBinding, HashSet<VirtualClip>> _bindingToClip = new();
         private readonly Dictionary<VirtualClip, HashSet<EditorCurveBinding>> _lastBindings = new();
 
-        public AnimationIndex(IEnumerable<VirtualAnimatorController> controllers)
+        internal AnimationIndex(
+            Func<IEnumerable<VirtualAnimatorController>> getControllers,
+            Func<long> getInvalidationToken)
+        {
+            _getControllers = getControllers;
+            _getInvalidationToken = getInvalidationToken;
+            _invalidateAction = () => _isValid = false;
+        }
+
+        // For testing
+        internal AnimationIndex(IEnumerable<VirtualAnimatorController> controllers)
         {
             _invalidateAction = () => _isValid = false;
-            _controllers = new List<VirtualAnimatorController>(controllers);
+            var controllerList = new List<VirtualAnimatorController>(controllers);
+            _getControllers = () => controllerList;
+            _getInvalidationToken = () => _lastInvalidationToken;
         }
 
         public IEnumerable<VirtualClip> GetClipsForObjectPath(string objectPath)
         {
-            if (!_isValid) RebuildCache();
+            if (!IsValid) RebuildCache();
 
             if (_objectPathToClip.TryGetValue(objectPath, out var clips))
             {
@@ -38,7 +55,7 @@ namespace nadena.dev.ndmf.animator
 
         public IEnumerable<VirtualClip> GetClipsForBinding(EditorCurveBinding binding)
         {
-            if (!_isValid) RebuildCache();
+            if (!IsValid) RebuildCache();
 
             if (_bindingToClip.TryGetValue(binding, out var clips))
             {
@@ -48,9 +65,9 @@ namespace nadena.dev.ndmf.animator
             return Enumerable.Empty<VirtualClip>();
         }
 
-        public void RewritePaths(Dictionary<string, string> rewriteRules)
+        public void RewritePaths(Dictionary<string, string?> rewriteRules)
         {
-            if (!_isValid) RebuildCache();
+            if (!IsValid) RebuildCache();
 
             List<VirtualClip> recacheNeeded = new();
             HashSet<VirtualClip> rewriteSet = new();
@@ -61,7 +78,13 @@ namespace nadena.dev.ndmf.animator
                 rewriteSet.UnionWith(clips);
             }
 
-            Func<string, string> rewriteFunc = rewriteRules.GetValueOrDefault;
+            Func<string, string?> rewriteFunc = k =>
+            {
+                // Note: We don't use GetValueOrDefault here as we want to distinguish between null and missing keys
+                // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
+                if (rewriteRules.TryGetValue(k, out var v)) return v;
+                return k;
+            };
             foreach (var clip in rewriteSet)
             {
                 clip.EditPaths(rewriteFunc);
@@ -81,7 +104,7 @@ namespace nadena.dev.ndmf.animator
 
         public void EditClipsByBinding(IEnumerable<EditorCurveBinding> binding, Action<VirtualClip> processClip)
         {
-            if (!_isValid) RebuildCache();
+            if (!IsValid) RebuildCache();
 
             var clips = binding.SelectMany(GetClipsForBinding).ToHashSet();
             var toRecache = new List<VirtualClip>();
@@ -161,7 +184,8 @@ namespace nadena.dev.ndmf.animator
             HashSet<object> visited = new();
             Queue<VirtualNode> queue = new();
 
-            foreach (var controller in _controllers)
+            _lastInvalidationToken = _getInvalidationToken();
+            foreach (var controller in _getControllers())
             {
                 queue.Enqueue(controller);
             }

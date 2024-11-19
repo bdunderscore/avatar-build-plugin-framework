@@ -54,6 +54,11 @@ namespace nadena.dev.ndmf.animator
         public CloneContext CloneContext =>
             _cloneContext ?? throw new InvalidOperationException("Extension context not initialized");
 
+        /// <summary>
+        ///     This value is updated every time the set of virtual controllers changes.
+        /// </summary>
+        public long CacheInvalidationToken { get; private set; }
+        
         public void OnActivate(BuildContext context)
         {
             var root = context.AvatarRootObject;
@@ -75,6 +80,7 @@ namespace nadena.dev.ndmf.animator
 
             var innateControllers = _platformBindings.GetInnateControllers(root);
             _layerStates.Clear(); // TODO - retain and reactivate virtual controllers
+            CacheInvalidationToken++;
 
             foreach (var (type, controller, _) in innateControllers)
             {
@@ -104,10 +110,14 @@ namespace nadena.dev.ndmf.animator
 
                 return state.VirtualController;
             }
-            set => _layerStates[key] = new LayerState(null)
+            set
             {
-                VirtualController = value
-            };
+                CacheInvalidationToken++;
+                _layerStates[key] = new LayerState(null)
+                {
+                    VirtualController = value
+                };
+            }
         }
 
         /// <summary>
@@ -117,6 +127,7 @@ namespace nadena.dev.ndmf.animator
         /// <param name="key"></param>
         public void ForgetController(object key)
         {
+            CacheInvalidationToken++;
             _layerStates.Remove(key);
         }
 
@@ -137,6 +148,11 @@ namespace nadena.dev.ndmf.animator
                     });
 
             _platformBindings!.CommitControllers(root, controllers);
+        }
+
+        public IEnumerable<VirtualAnimatorController> GetAllControllers()
+        {
+            return _layerStates.Select(kv => this[kv.Key]).Where(v => v != null)!;
         }
     }
 }

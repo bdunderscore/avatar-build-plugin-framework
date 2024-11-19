@@ -117,6 +117,39 @@ namespace UnitTests.AnimationServices
         }
 
         [Test]
+        public void RewritePathDistinguishesBetweenMissingAndNullMappings()
+        {
+            var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
+            var controller = VirtualAnimatorController.Create(context, "test");
+            var layer = controller.AddLayer(LayerPriority.Default, "test");
+
+            var clip1 = VirtualClip.Create("c1");
+            var clip2 = VirtualClip.Create("c2");
+            
+            layer.StateMachine.AddState("s1", motion: clip1);
+            layer.StateMachine.AddState("s2", motion: clip2);
+            
+            var index = new AnimationIndex( new [] { controller });
+            
+            var binding1 = EditorCurveBinding.FloatCurve("path1", typeof(Transform), "prop1");
+            var binding2 = EditorCurveBinding.FloatCurve("path2", typeof(Transform), "prop2");
+
+            clip1.SetFloatCurve(binding1, AnimationCurve.Constant(0, 1, 1));
+            clip1.SetFloatCurve(binding2, AnimationCurve.Constant(0, 1, 1));
+            
+            index.RewritePaths(new Dictionary<string, string>
+            {
+                { "path1", null }
+            });
+
+            var p1clips = index.GetClipsForObjectPath("path1").ToList();
+            var p2clips = index.GetClipsForObjectPath("path2").ToList();
+            
+            Assert.IsEmpty(p1clips);
+            Assert.AreEqual(1, p2clips.Count);
+        }
+
+        [Test]
         public void TestEditClipsByBinding()
         {
             var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
