@@ -12,7 +12,7 @@ using VRC.SDK3.Avatars.Components;
 namespace nadena.dev.ndmf.animator
 {
     [PublicAPI]
-    public sealed class AnimatorServicesContext : IExtensionContext
+    public sealed class VirtualControllerContext : IExtensionContext
     {
         private class LayerState
         {

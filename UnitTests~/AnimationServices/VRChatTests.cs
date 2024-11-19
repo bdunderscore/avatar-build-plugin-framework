@@ -18,7 +18,7 @@ namespace UnitTests.AnimationServices
             var root = CreatePrefab("TestAssets/EmptyAvatar.prefab");
             var ctx = CreateContext(root);
 
-            var anim = ctx.ActivateExtensionContext<AnimatorServicesContext>();
+            var anim = ctx.ActivateExtensionContext<VirtualControllerContext>();
 
             var fx = anim[VRCAvatarDescriptor.AnimLayerType.FX];
             Assert.IsNotNull(fx);
@@ -40,7 +40,7 @@ namespace UnitTests.AnimationServices
             SetBaseLayer(avDesc, controller, VRCAvatarDescriptor.AnimLayerType.FX);
 
             var ctx = CreateContext(root);
-            var anim = ctx.ActivateExtensionContext<AnimatorServicesContext>();
+            var anim = ctx.ActivateExtensionContext<VirtualControllerContext>();
             
             var fx = anim[VRCAvatarDescriptor.AnimLayerType.FX];
             Assert.IsNotNull(fx);
@@ -70,12 +70,12 @@ namespace UnitTests.AnimationServices
             var root = CreatePrefab("TestAssets/EmptyAvatar.prefab");
             
             var ctx = CreateContext(root);
-            var anim = ctx.ActivateExtensionContext<AnimatorServicesContext>();
+            var anim = ctx.ActivateExtensionContext<VirtualControllerContext>();
 
             anim[VRCAvatarDescriptor.AnimLayerType.FX]!.Name = "FX";
             anim[VRCAvatarDescriptor.AnimLayerType.IKPose]!.Name = "IK";
             
-            ctx.DeactivateExtensionContext<AnimatorServicesContext>();
+            ctx.DeactivateExtensionContext<VirtualControllerContext>();
             
             var avDesc = root.GetComponent<VRCAvatarDescriptor>();
             var fxLayer = avDesc.baseAnimationLayers.First(l => l.type == VRCAvatarDescriptor.AnimLayerType.FX);
@@ -94,7 +94,7 @@ namespace UnitTests.AnimationServices
             SetBaseLayer(avDesc, BuildInterlayerController("c1"), VRCAvatarDescriptor.AnimLayerType.FX);
             
             var ctx = CreateContext(root);
-            var anim = ctx.ActivateExtensionContext<AnimatorServicesContext>();
+            var anim = ctx.ActivateExtensionContext<VirtualControllerContext>();
             
             var fx = anim[VRCAvatarDescriptor.AnimLayerType.FX];
             var c1_1 = fx.Layers.First(l => l.Name == "c1:1");
@@ -111,7 +111,7 @@ namespace UnitTests.AnimationServices
                 fx.AddLayer(LayerPriority.Default, l);
             }
             
-            ctx.DeactivateExtensionContext<AnimatorServicesContext>();
+            ctx.DeactivateExtensionContext<VirtualControllerContext>();
             
             var fxLayer = avDesc.baseAnimationLayers.First(l => l.type == VRCAvatarDescriptor.AnimLayerType.FX);
             var stateMachines = ((AnimatorController)fxLayer.animatorController).layers
@@ -138,7 +138,7 @@ namespace UnitTests.AnimationServices
             SetBaseLayer(avDesc, BuildInterlayerController("c1"), VRCAvatarDescriptor.AnimLayerType.Base);
             
             var ctx = CreateContext(root);
-            var anim = ctx.ActivateExtensionContext<AnimatorServicesContext>();
+            var anim = ctx.ActivateExtensionContext<VirtualControllerContext>();
 
             var baseLayer = anim[VRCAvatarDescriptor.AnimLayerType.Base];
             var lc = (VRCAnimatorLayerControl) baseLayer.Layers
@@ -146,7 +146,7 @@ namespace UnitTests.AnimationServices
                 .StateMachine.DefaultState.Behaviours.First();
             Assert.AreEqual(1, lc.layer);
             
-            ctx.DeactivateExtensionContext<AnimatorServicesContext>();
+            ctx.DeactivateExtensionContext<VirtualControllerContext>();
             
             var baseLayerController = avDesc.baseAnimationLayers.First(l => l.type == VRCAvatarDescriptor.AnimLayerType.Base);
             var c11layer = ((AnimatorController)baseLayerController.animatorController).layers
@@ -178,7 +178,7 @@ namespace UnitTests.AnimationServices
             SetBaseLayer(avDesc, controller, VRCAvatarDescriptor.AnimLayerType.FX);
             
             var ctx = CreateContext(root);
-            var anim = ctx.ActivateExtensionContext<AnimatorServicesContext>();
+            var anim = ctx.ActivateExtensionContext<VirtualControllerContext>();
             
             var fx = anim[VRCAvatarDescriptor.AnimLayerType.FX];
             var lc = (VRCAnimatorLayerControl) fx.Layers.First().StateMachine.Behaviours.First();
@@ -187,7 +187,7 @@ namespace UnitTests.AnimationServices
             var l2 = fx.AddLayer(LayerPriority.Default, "test");
             lc.layer = l2.VirtualLayerIndex;
             
-            ctx.DeactivateExtensionContext<AnimatorServicesContext>();
+            ctx.DeactivateExtensionContext<VirtualControllerContext>();
             
             var fxLayer = avDesc.baseAnimationLayers.First(l => l.type == VRCAvatarDescriptor.AnimLayerType.FX);
             var stateMachine = ((AnimatorController)fxLayer.animatorController).layers.First().stateMachine;
