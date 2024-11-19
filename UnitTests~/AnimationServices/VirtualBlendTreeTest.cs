@@ -18,7 +18,7 @@ namespace UnitTests.AnimationServices
             var tree = new BlendTree();
             setup(tree);
 
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
 
             var virtTree = (VirtualBlendTree) cloneContext.Clone(tree);
             assertViaVirtualState(virtTree);
@@ -144,7 +144,7 @@ namespace UnitTests.AnimationServices
                 }
             };
 
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
 
             var virtTree = (VirtualBlendTree) cloneContext.Clone(tree);
             Assert.AreEqual(2, virtTree.Children.Count);

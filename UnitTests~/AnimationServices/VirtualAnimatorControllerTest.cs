@@ -12,7 +12,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesParameters()
         {
-            CloneContext context = new CloneContext(new GenericPlatformAnimatorBindings());
+            CloneContext context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             
             var controller = TrackObject(new AnimatorController());
             controller.AddParameter("x", AnimatorControllerParameterType.Float);
@@ -49,7 +49,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void PreservesLayersAndReferences()
         {
-            CloneContext context = new CloneContext(new GenericPlatformAnimatorBindings());
+            CloneContext context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             
             var ac1 = TrackObject(new AnimatorController());
             var ac2 = TrackObject(new AnimatorController());

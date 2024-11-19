@@ -11,6 +11,26 @@ using VRC.SDK3.Avatars.Components;
 
 namespace nadena.dev.ndmf.animator
 {
+    /// <summary>
+    ///     This extension context converts all "innate" animator controllers bound to the avatar into virtual controllers.
+    ///     By "innate", we mean controllers which are understood by the underlying platform (e.g. VRChat). As part of this,
+    ///     the controllers and animations are cloned, so that changes to them do not affect the original assets.
+    ///     This context acts as a key-value map from arbitrary context keys to virtual controllers. For VRChat controllers,
+    ///     the context will be a `VRCAvatarDescriptor.AnimLayerType` enum value. For other sub-components which have
+    ///     animator controllers (e.g. the unity `Animator` component), the context key will be that controller. Otherwise,
+    ///     it's up to the IPlatformAnimatorBindings implementation to define the context key.
+    ///     Upon deactivation, any changes to virtual controllers will be written back to their sources.
+    ///     You may also add arbitrary virtual controllers to the context, by setting the value for a given key. These
+    ///     controllers will be generally ignored, unless you choose to do something with them. Note that these controllers
+    ///     will not be preserved across a context deactivation.
+    ///     ## Limitations
+    ///     When this context is active, you must not modify the original controllers or their animations. This is because
+    ///     certain virtual objects may reference the original assets, and thus changes to them may result in undefined
+    ///     behavior.
+    ///     After deactivating this context, you must not modify the virtual controllers or their animations. This is because
+    ///     subsequent NDMF processing steps may directly modify the serialized animator controllers; conversely, when the
+    ///     virtual controller context is reactivated, it may or may not reuse the same virtual nodes as before.
+    /// </summary>
     [PublicAPI]
     public sealed class VirtualControllerContext : IExtensionContext
     {
@@ -41,19 +61,22 @@ namespace nadena.dev.ndmf.animator
             #if NDMF_VRCSDK3_AVATARS
             if (root.TryGetComponent<VRCAvatarDescriptor>(out _))
             {
-                _platformBindings = new VRChatPlatformAnimatorBindings();
+                _platformBindings = VRChatPlatformAnimatorBindings.Instance;
             }
             else
             {
-                _platformBindings = new GenericPlatformAnimatorBindings();
+                _platformBindings = GenericPlatformAnimatorBindings.Instance;
             }
             #else
-            _platformBindings = new GenericPlatformAnimatorBindings();
+            _platformBindings = GenericPlatformAnimatorBindings.Instance;
             #endif
 
             _cloneContext = new CloneContext(_platformBindings);
 
-            foreach (var (type, controller, _) in _platformBindings.GetInnateControllers(root))
+            var innateControllers = _platformBindings.GetInnateControllers(root);
+            _layerStates.Clear(); // TODO - retain and reactivate virtual controllers
+
+            foreach (var (type, controller, _) in innateControllers)
             {
                 _layerStates[type] = new LayerState(controller);
 
@@ -87,13 +110,24 @@ namespace nadena.dev.ndmf.animator
             };
         }
 
+        /// <summary>
+        ///     "Forgets" a specific controller. This should usually only be done for controllers which are no longer
+        ///     relevant, e.g. if the corresponding component has been removed.
+        /// </summary>
+        /// <param name="key"></param>
+        public void ForgetController(object key)
+        {
+            _layerStates.Remove(key);
+        }
+
         public void OnDeactivate(BuildContext context)
         {
             var root = context.AvatarRootObject;
 
             var commitContext = new CommitContext(_cloneContext!.PlatformBindings);
 
-            var controllers = _layerStates.Where(kvp => kvp.Value.VirtualController != null)
+            var controllers = _layerStates
+                .Where(kvp => kvp.Value.VirtualController != null)
                 .ToDictionary(
                     kv => kv.Key,
                     kv =>
@@ -102,7 +136,7 @@ namespace nadena.dev.ndmf.animator
                         return (RuntimeAnimatorController)commitContext.CommitObject(kv.Value.VirtualController!);
                     });
 
-            _platformBindings!.CommitInnateControllers(root, controllers);
+            _platformBindings!.CommitControllers(root, controllers);
         }
     }
 }

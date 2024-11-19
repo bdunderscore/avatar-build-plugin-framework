@@ -20,7 +20,7 @@ namespace UnitTests.AnimationServices
             var transition = create();
             setup(transition);
 
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
 
             VirtualStateTransition virtualStateTransition = cloneContext.Clone(transition);
             assertViaVirtualState(virtualStateTransition);
@@ -61,7 +61,7 @@ namespace UnitTests.AnimationServices
             var transition = create();
             setup(transition);
 
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
 
             VirtualTransition virtualStateTransition = cloneContext.Clone(transition);
             assertViaVirtualState(virtualStateTransition);

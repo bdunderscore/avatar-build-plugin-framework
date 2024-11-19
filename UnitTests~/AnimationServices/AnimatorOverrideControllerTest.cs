@@ -11,7 +11,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void TestSimpleOverride()
         {
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
 
             var originalController = new AnimatorController();
             var originalStateMachine = new AnimatorStateMachine();
@@ -44,7 +44,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void TestBlendTreeChildOverride()
         {
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             
             var originalController = new AnimatorController();
             var originalStateMachine = new AnimatorStateMachine();

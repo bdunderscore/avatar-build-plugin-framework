@@ -34,7 +34,7 @@ namespace nadena.dev.ndmf.animator
         /// </summary>
         /// <param name="root"></param>
         /// <param name="controllers"></param>
-        void CommitInnateControllers(GameObject root, IDictionary<object, RuntimeAnimatorController> controllers)
+        void CommitControllers(GameObject root, IDictionary<object, RuntimeAnimatorController> controllers)
         {
             
         }

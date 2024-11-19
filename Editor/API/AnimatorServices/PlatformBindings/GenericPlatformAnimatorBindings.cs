@@ -7,6 +7,12 @@ namespace nadena.dev.ndmf.animator
 {
     public sealed class GenericPlatformAnimatorBindings : IPlatformAnimatorBindings
     {
+        public static readonly GenericPlatformAnimatorBindings Instance = new();
+
+        private GenericPlatformAnimatorBindings()
+        {
+        }
+        
         public bool IsSpecialMotion(Motion m)
         {
             return false;
@@ -14,13 +20,40 @@ namespace nadena.dev.ndmf.animator
 
         public IEnumerable<(object, RuntimeAnimatorController, bool)> GetInnateControllers(GameObject root)
         {
-            yield break;
+            foreach (var animator in root.GetComponentsInChildren<Animator>(true))
+            {
+                var controller = animator.runtimeAnimatorController;
+
+                if (controller != null)
+                {
+                    yield return (animator, controller, false);
+                }
+            }
+
+            foreach (var custom in root.GetComponentsInChildren<IVirtualizeAnimatorController>(true))
+            {
+                var controller = custom.AnimatorController;
+
+                if (controller != null)
+                {
+                    yield return (custom, controller, false);
+                }
+            }
         }
 
-        public void CommitInnateControllers(GameObject root,
-            IDictionary<object, RuntimeAnimatorController> controllers)
+        public void CommitControllers(GameObject root, IDictionary<object, RuntimeAnimatorController> controllers)
         {
-            // no-op
+            foreach (var (key, controller) in controllers)
+            {
+                if (key is Animator a && a != null)
+                {
+                    a.runtimeAnimatorController = controller;
+                }
+                else if (key is IVirtualizeAnimatorController v && key is Component c && c != null)
+                {
+                    v.AnimatorController = controller;
+                }
+            }
         }
     }
 }

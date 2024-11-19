@@ -8,6 +8,7 @@ using UnityEditor.Animations;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 #if NDMF_VRCSDK3_AVATARS
+using HarmonyLib;
 using VRC.Core;
 using VRC.SDK3.Avatars.Components;
 #endif
@@ -72,8 +73,12 @@ namespace UnitTests
             go.name = name;
             go.AddComponent<Animator>();
 #if NDMF_VRCSDK3_AVATARS
-            go.AddComponent<VRCAvatarDescriptor>();
+            var avdesc = go.AddComponent<VRCAvatarDescriptor>();
             go.AddComponent<PipelineManager>();
+
+            // VRCAvatarDescriptor is initialized in the editor's OnEnable...
+            var editor = Editor.CreateEditor(avdesc);
+            AccessTools.Method(editor.GetType(), "OnEnable").Invoke(editor, null);
 #endif
 
             objects.Add(go);

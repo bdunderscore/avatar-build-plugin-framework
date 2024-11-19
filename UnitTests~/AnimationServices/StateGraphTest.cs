@@ -48,7 +48,7 @@ namespace UnitTests.AnimationServices
                 new AnimatorStateTransition() { isExit = true },
             };
             
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var clonedS1 = cloneContext.Clone(s1);
             
             Assert.AreEqual(clonedS1.Transitions.Count, 4);
@@ -130,7 +130,7 @@ namespace UnitTests.AnimationServices
                 }
             });
             
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var clonedSM1 = cloneContext.Clone(sm1);
             
             Assert.AreEqual(clonedSM1.StateMachines.Count, 2);

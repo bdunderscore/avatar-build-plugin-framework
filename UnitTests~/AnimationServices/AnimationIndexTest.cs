@@ -12,7 +12,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void TestBasicIndexing()
         {
-            var context = new CloneContext(new GenericPlatformAnimatorBindings());
+            var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var controller = VirtualAnimatorController.Create(context, "test");
             var layer = controller.AddLayer(LayerPriority.Default, "test");
 
@@ -57,7 +57,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void TestRewritePaths()
         {
-            var context = new CloneContext(new GenericPlatformAnimatorBindings());
+            var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var controller = VirtualAnimatorController.Create(context, "test");
             var layer = controller.AddLayer(LayerPriority.Default, "test");
 
@@ -119,7 +119,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void TestEditClipsByBinding()
         {
-            var context = new CloneContext(new GenericPlatformAnimatorBindings());
+            var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var controller = VirtualAnimatorController.Create(context, "test");
             var layer = controller.AddLayer(LayerPriority.Default, "test");
 
@@ -165,7 +165,7 @@ namespace UnitTests.AnimationServices
         [Test]
         public void TestGraphLoops()
         {
-            var context = new CloneContext(new GenericPlatformAnimatorBindings());
+            var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var controller = VirtualAnimatorController.Create(context, "test");
             var layer = controller.AddLayer(LayerPriority.Default, "test");
             

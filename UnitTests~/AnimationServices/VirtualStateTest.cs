@@ -19,7 +19,7 @@ namespace UnitTests.AnimationServices
             var state = new AnimatorState();
             setup(state);
 
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
 
             VirtualState virtualState = cloneContext.Clone(state);
             assertViaVirtualState(virtualState);

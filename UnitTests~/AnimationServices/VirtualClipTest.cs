@@ -23,7 +23,7 @@ namespace UnitTests.AnimationServices
 
         private CloneContext CreateCloneContext()
         {
-            return new CloneContext(new GenericPlatformAnimatorBindings());
+            return new CloneContext(GenericPlatformAnimatorBindings.Instance);
         }
 
         AnimationClip Commit(VirtualClip clip)

@@ -21,7 +21,7 @@ namespace UnitTests.AnimationServices
             var layer = new AnimatorControllerLayer();
             setup(layer);
 
-            var cloneContext = new CloneContext(new GenericPlatformAnimatorBindings());
+            var cloneContext = new CloneContext(GenericPlatformAnimatorBindings.Instance);
 
             var virtVal = cloneContext.Clone(layer, 0);
             assertViaVirtualState(virtVal);
@@ -120,7 +120,7 @@ namespace UnitTests.AnimationServices
         {
             AssertPreserveProperty(
                 state => state.stateMachine = TrackObject(new AnimatorStateMachine() { name = "x" }),
-                state => state.StateMachine = VirtualStateMachine.Create(new CloneContext(new GenericPlatformAnimatorBindings()), "x"),
+                state => state.StateMachine = VirtualStateMachine.Create(new CloneContext(GenericPlatformAnimatorBindings.Instance), "x"),
                 state => Assert.AreEqual("x", state.stateMachine.name),
                 state => Assert.AreEqual("x", state.StateMachine.Name)
             );
@@ -130,7 +130,7 @@ namespace UnitTests.AnimationServices
         public void SyncedLayerOverridesArePreserved()
         {
             var testController = LoadAsset<AnimatorController>("TestAssets/SyncedLayers.controller");
-            var context = new CloneContext(new GenericPlatformAnimatorBindings());
+            var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var virtualController = context.Clone(testController);
             
             var commitContext = new CommitContext();
@@ -151,7 +151,7 @@ namespace UnitTests.AnimationServices
         {
             var testController = LoadAsset<AnimatorController>("TestAssets/SyncedLayers.controller");
             var c3 = LoadAsset<AnimationClip>("TestAssets/c3.anim");
-            var context = new CloneContext(new GenericPlatformAnimatorBindings());
+            var context = new CloneContext(GenericPlatformAnimatorBindings.Instance);
             var virtualController = context.Clone(testController);
 
             var virtBaseLayer = virtualController.Layers.ToList()[0];

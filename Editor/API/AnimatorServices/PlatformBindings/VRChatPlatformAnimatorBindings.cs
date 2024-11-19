@@ -14,6 +14,8 @@ namespace nadena.dev.ndmf.animator
 {
     public sealed class VRChatPlatformAnimatorBindings : IPlatformAnimatorBindings
     {
+        public static readonly VRChatPlatformAnimatorBindings Instance = new();
+        
         private const string SAMPLE_PATH_PACKAGE =
             "Packages/com.vrchat.avatars";
 
@@ -21,6 +23,10 @@ namespace nadena.dev.ndmf.animator
             "Packages/com.vrchat.avatars/Samples/AV3 Demo Assets/Animation/Controllers";
 
         private HashSet<Motion>? _specialMotions;
+
+        private VRChatPlatformAnimatorBindings()
+        {
+        }
 
         private AnimatorController? GetFallbackController(VRCAvatarDescriptor.AnimLayerType ty)
         {
@@ -84,6 +90,11 @@ namespace nadena.dev.ndmf.animator
 
         public IEnumerable<(object, RuntimeAnimatorController, bool)> GetInnateControllers(GameObject root)
         {
+            foreach (var result in GenericPlatformAnimatorBindings.Instance.GetInnateControllers(root))
+            {
+                yield return result;
+            }
+            
             if (!root.TryGetComponent<VRCAvatarDescriptor>(out var vrcAvatarDescriptor)) yield break;
 
             // TODO: Fallback layers
@@ -112,7 +123,7 @@ namespace nadena.dev.ndmf.animator
             }
         }
 
-        public void CommitInnateControllers(
+        public void CommitControllers(
             GameObject root,
             IDictionary<object, RuntimeAnimatorController> controllers
         )
@@ -121,6 +132,8 @@ namespace nadena.dev.ndmf.animator
 
             EditLayers(vrcAvatarDescriptor.baseAnimationLayers);
             EditLayers(vrcAvatarDescriptor.specialAnimationLayers);
+
+            GenericPlatformAnimatorBindings.Instance.CommitControllers(root, controllers);
 
             void EditLayers(VRCAvatarDescriptor.CustomAnimLayer[] layers)
             {

@@ -35,7 +35,7 @@ namespace nadena.dev.ndmf.animator
 
         public object? ActiveInnateLayerKey { get; internal set; }
 
-        internal CommitContext() : this(new GenericPlatformAnimatorBindings())
+        internal CommitContext() : this(GenericPlatformAnimatorBindings.Instance)
         {
         }
 
