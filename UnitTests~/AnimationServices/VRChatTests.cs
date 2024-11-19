@@ -1,12 +1,12 @@
-﻿using System.Linq;
+﻿#if NDMF_VRCSDK3_AVATARS
+
+using System.Linq;
 using nadena.dev.ndmf.animator;
 using NUnit.Framework;
 using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase;
-
-#if NDMF_VRCSDK3_AVATARS
 
 namespace UnitTests.AnimationServices
 {
