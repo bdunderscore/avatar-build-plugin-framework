@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
+using UnityEditor.Animations;
 using UnityEngine;
 #if NDMF_VRCSDK3_AVATARS
 using VRC.SDK3.Avatars.Components;
@@ -153,6 +155,55 @@ namespace nadena.dev.ndmf.animator
         public IEnumerable<VirtualAnimatorController> GetAllControllers()
         {
             return _layerStates.Select(kv => this[kv.Key]).Where(v => v != null)!;
+        }
+
+
+        [return: NotNullIfNotNull("controller")]
+        public VirtualAnimatorController? Clone(RuntimeAnimatorController? controller)
+        {
+            return CloneContext.Clone(controller);
+        }
+
+        [return: NotNullIfNotNull("layer")]
+        public VirtualLayer? Clone(AnimatorControllerLayer? layer, int index)
+        {
+            return CloneContext.Clone(layer, index);
+        }
+
+        [return: NotNullIfNotNull("stateMachine")]
+        public VirtualStateMachine? Clone(AnimatorStateMachine? stateMachine)
+        {
+            return CloneContext.Clone(stateMachine);
+        }
+
+        [return: NotNullIfNotNull("transition")]
+        public VirtualStateTransition? Clone(AnimatorStateTransition? transition)
+        {
+            return CloneContext.Clone(transition);
+        }
+
+        [return: NotNullIfNotNull("transition")]
+        public VirtualTransition? Clone(AnimatorTransition? transition)
+        {
+            return CloneContext.Clone(transition);
+        }
+
+        [return: NotNullIfNotNull("state")]
+        public VirtualState? Clone(AnimatorState? state)
+        {
+            return CloneContext.Clone(state);
+        }
+
+        [return: NotNullIfNotNull("m")]
+        public VirtualMotion? Clone(Motion? m)
+        {
+            return CloneContext.Clone(m);
+        }
+
+        [return: NotNullIfNotNull("clip")]
+        public VirtualClip? Clone(AnimationClip? clip)
+        {
+            return CloneContext.Clone(clip);
         }
     }
 }

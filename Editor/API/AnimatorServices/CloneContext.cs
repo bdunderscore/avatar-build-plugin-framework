@@ -11,6 +11,12 @@ using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
+    /// <summary>
+    ///     The CloneContext keeps track of which virtual objects have been cloned from which original objects, and
+    ///     therefore avoids double-cloning. It also keeps track of various context used during cloning, such as virtual
+    ///     layer offsets.
+    ///     Most users shouldn't use CloneContext directly; use the Clone wrappers in VirtualControllerContext instead.
+    /// </summary>
     [PublicAPI]
     public sealed class CloneContext
     {
