@@ -4,12 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using nadena.dev.ndmf.platform;
 using nadena.dev.ndmf.reporting;
-using nadena.dev.ndmf.runtime;
 using nadena.dev.ndmf.ui;
 using nadena.dev.ndmf.util;
 using UnityEditor;
@@ -54,6 +52,8 @@ namespace nadena.dev.ndmf
         internal readonly ObjectRegistry _registry;
         internal readonly ErrorReport _report;
 
+        internal INDMFPlatformProvider PlatformProvider { get; }
+        
         public ObjectRegistry ObjectRegistry => _registry;
         public ErrorReport ErrorReport => _report;
 
@@ -117,6 +117,9 @@ namespace nadena.dev.ndmf
 
             Debug.Log("Starting processing for avatar: " + obj.name);
             sw.Start();
+
+            // TODO[platform]: This needs to be passed in later, but for now let's just grab the ambient platform
+            PlatformProvider = AmbientPlatform.DefaultPlatform;
 
             _avatarRootObject = obj;
             _avatarRootTransform = obj.transform;
@@ -188,7 +191,7 @@ namespace nadena.dev.ndmf
                 _savedObjects.Remove(AssetContainer);
 
                 int index = 0;
-                List<UnityEngine.Object> assetsToSave = new List<UnityEngine.Object>();
+                var assetsToSave = new List<UnityObject>();
                 foreach (var asset in _avatarRootObject.ReferencedAssets(traverseSaved: true, includeScene: false))
                 {
                     if (asset is MonoScript)

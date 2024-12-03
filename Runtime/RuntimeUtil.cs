@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 #if NDMF_VRCSDK3_AVATARS
 using VRC.SDK3.Avatars.Components;
 #endif
@@ -15,6 +15,12 @@ namespace nadena.dev.ndmf.runtime
     /// </summary>
     public static class RuntimeUtil
     {
+#if NDMF_VRCSDK3_AVATARS
+        internal static Type AvatarRootTransformType = typeof(VRCAvatarDescriptor);
+#else
+        internal static Type AvatarRootTransformType = typeof(Animator);
+#endif
+        
         /// <summary>
         /// Invoke this function to register a callback with EditorApplication.delayCall from a context that cannot
         /// access EditorApplication.
@@ -42,7 +48,7 @@ namespace nadena.dev.ndmf.runtime
         /// Returns whether the editor is in play mode.
         /// </summary>
 #if UNITY_EDITOR
-        public static bool IsPlaying => UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode;
+        public static bool IsPlaying => EditorApplication.isPlayingOrWillChangePlaymode;
 #else
         public static bool IsPlaying => true;
 #endif
@@ -93,14 +99,8 @@ namespace nadena.dev.ndmf.runtime
         /// <returns></returns>
         public static bool IsAvatarRoot(Transform target)
         {
-#if NDMF_VRCSDK3_AVATARS
-            return target.TryGetComponent<VRCAvatarDescriptor>(out _);
-#else            
-            if (!target.TryGetComponent<Animator>(out _)) return false;
-
-            var parent = target.transform.parent;
-            return !(parent && parent.GetComponentInParent<Animator>());
-#endif
+            return target.TryGetComponent(AvatarRootTransformType, out _)
+                   && (target.parent == null || target.parent.GetComponentInParent(AvatarRootTransformType) == null);
         }
 
         /// <summary>
@@ -117,23 +117,19 @@ namespace nadena.dev.ndmf.runtime
                 {
                     var scene = SceneManager.GetSceneAt(i);
                     if (!scene.isLoaded) continue;
-                    foreach (var sceneRoot in scene.GetRootGameObjects())
+
+                    foreach (var avatar in FindAvatarsInScene(scene))
                     {
-                        foreach (var avatar in FindAvatarRoots(sceneRoot))
-                        {
-                            yield return avatar;
-                        }
+                        yield return avatar.gameObject;
                     }
                 }
             }
             else
             {
                 GameObject priorRoot = null;
-#if NDMF_VRCSDK3_AVATARS
-                var candidates = root.GetComponentsInChildren<VRCAvatarDescriptor>();
-#else
-                var candidates = root.GetComponentsInChildren<Animator>();
-#endif
+
+                var candidates = root.GetComponentsInChildren(AvatarRootTransformType);
+
                 foreach (var candidate in candidates)
                 {
                    
@@ -154,13 +150,15 @@ namespace nadena.dev.ndmf.runtime
         /// <returns></returns>
         public static Transform FindAvatarInParents(Transform target)
         {
+            Transform candidate = null;
             while (target != null)
             {
-                if (IsAvatarRoot(target)) return target;
+                // Find the highest component in the hierarchy
+                if (target.TryGetComponent(AvatarRootTransformType, out _)) candidate = target;
                 target = target.parent;
             }
 
-            return null;
+            return candidate;
         }
         
         /// <summary>
@@ -172,13 +170,9 @@ namespace nadena.dev.ndmf.runtime
         {
             foreach (var root in scene.GetRootGameObjects())
             {
-#if NDMF_VRCSDK3_AVATARS
-                foreach (var avatar in root.GetComponentsInChildren<VRCAvatarDescriptor>())
-#else            
-                foreach (var avatar in root.GetComponentsInChildren<Animator>())
-#endif
+                foreach (var avatar in FindAvatarRoots(root))
                 {
-                    if (IsAvatarRoot(avatar.transform)) yield return avatar.transform;
+                    yield return avatar.transform;
                 }
             }
         }
