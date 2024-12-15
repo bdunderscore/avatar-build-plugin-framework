@@ -187,6 +187,7 @@ namespace nadena.dev.ndmf.animator
         {
             obj.behaviours = Behaviours.Select(context.CommitBehaviour).ToArray();
             obj.transitions = Transitions.Select(t => (AnimatorStateTransition)context.CommitObject(t)).ToArray();
+            obj.motion = context.CommitObject(Motion);
         }
 
         public override string ToString()

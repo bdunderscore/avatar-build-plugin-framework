@@ -148,7 +148,7 @@ namespace nadena.dev.ndmf.animator
                         commitContext.ActiveInnateLayerKey = kv.Key;
                         return (RuntimeAnimatorController)commitContext.CommitObject(kv.Value.VirtualController!);
                     });
-
+            
             _platformBindings!.CommitControllers(root, controllers);
         }
 

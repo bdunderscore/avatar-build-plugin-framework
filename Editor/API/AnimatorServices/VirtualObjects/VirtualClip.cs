@@ -267,9 +267,10 @@ namespace nadena.dev.ndmf.animator
                     var newBinding = binding;
                     newBinding.path = pathEditor(binding.path);
 
-                    if (ECBComparator.Instance.Equals(binding, newBinding))
+                    if (ECBComparator.Instance.Equals(binding, newBinding) 
+                        || (binding.type == typeof(Animator) && binding.path == ""))
                     {
-                        newCache[newBinding] = kvp.Value;
+                        newCache[binding] = kvp.Value;
                         continue;
                     }
 

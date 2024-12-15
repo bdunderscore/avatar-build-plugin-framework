@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using nadena.dev.ndmf.runtime;
 using UnityEngine;
@@ -119,7 +120,7 @@ namespace nadena.dev.ndmf.animator
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public string? GetVirtualPathForObject(GameObject obj)
+        public string GetVirtualPathForObject(GameObject obj)
         {
             return GetVirtualPathForObject(obj.transform);
         }
@@ -131,7 +132,7 @@ namespace nadena.dev.ndmf.animator
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public string? GetVirtualPathForObject(Transform t)
+        public string GetVirtualPathForObject(Transform t)
         {
             if (_objectToOriginalPaths.TryGetValue(t, out var paths))
             {
@@ -139,7 +140,7 @@ namespace nadena.dev.ndmf.animator
             }
 
             var path = RuntimeUtil.RelativePath(_root, t);
-            if (path == null) return null;
+            if (path == null) path = t.gameObject.name + "###UNROOTED_" + t.GetInstanceID();
 
             if (_pathToObject.ContainsKey(path))
             {

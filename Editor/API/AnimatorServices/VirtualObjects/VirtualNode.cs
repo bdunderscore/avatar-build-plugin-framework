@@ -41,7 +41,30 @@ namespace nadena.dev.ndmf.animator
             _lastCacheObserver = observer;
         }
 
-        internal IEnumerable<VirtualNode> EnumerateChildren()
+        public IEnumerable<VirtualNode> AllReachableNodes()
+        {
+            var visited = new HashSet<VirtualNode>();
+            var queue = new Queue<VirtualNode>();
+            
+            queue.Enqueue(this);
+            visited.Add(this);
+
+            while (queue.Count > 0)
+            {
+                var node = queue.Dequeue();
+                yield return node;
+
+                foreach (var child in node.EnumerateChildren())
+                {
+                    if (visited.Add(child))
+                    {
+                        queue.Enqueue(child);
+                    }
+                }
+            }
+        }
+        
+        public IEnumerable<VirtualNode> EnumerateChildren()
         {
             return _EnumerateChildren();
         }

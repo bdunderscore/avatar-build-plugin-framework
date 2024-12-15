@@ -282,5 +282,33 @@ namespace nadena.dev.ndmf.animator
 
             return state;
         }
+
+        /// <summary>
+        /// Returns an enumerator of all states reachable from this state machine (including sub-state machines) 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<VirtualState> AllStates()
+        {
+            foreach (var state in Walk(this, new())) yield return state;
+
+            IEnumerable<VirtualState> Walk(VirtualStateMachine sm, HashSet<VirtualStateMachine> visited)
+            {
+                if (!visited.Add(sm)) yield break;
+                
+                foreach (var state in States)
+                {
+                    yield return state.State;
+                }
+
+                foreach (var ssm in StateMachines)
+                {
+                    foreach (var state in Walk(ssm.StateMachine, visited))
+                    {
+                        yield return state;
+                    }
+                }
+            }
+
+        }
     }
 }

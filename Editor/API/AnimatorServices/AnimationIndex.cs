@@ -9,7 +9,7 @@ namespace nadena.dev.ndmf.animator
 {
     public sealed class AnimationIndex
     {
-        private readonly Func<IEnumerable<VirtualAnimatorController>> _getControllers;
+        private readonly Func<IEnumerable<VirtualNode>> _getRoots;
         private readonly Func<long> _getInvalidationToken;
 
         private long _lastInvalidationToken;
@@ -22,22 +22,21 @@ namespace nadena.dev.ndmf.animator
         private readonly Dictionary<string, HashSet<VirtualClip>> _objectPathToClip = new();
         private readonly Dictionary<EditorCurveBinding, HashSet<VirtualClip>> _bindingToClip = new();
         private readonly Dictionary<VirtualClip, HashSet<EditorCurveBinding>> _lastBindings = new();
-
+        
         internal AnimationIndex(
-            Func<IEnumerable<VirtualAnimatorController>> getControllers,
+            Func<IEnumerable<VirtualAnimatorController>> getRoots,
             Func<long> getInvalidationToken)
         {
-            _getControllers = getControllers;
+            _getRoots = getRoots;
             _getInvalidationToken = getInvalidationToken;
             _invalidateAction = () => _isValid = false;
         }
-
-        // For testing
-        internal AnimationIndex(IEnumerable<VirtualAnimatorController> controllers)
+        
+        public AnimationIndex(IEnumerable<VirtualNode> controllers)
         {
             _invalidateAction = () => _isValid = false;
-            var controllerList = new List<VirtualAnimatorController>(controllers);
-            _getControllers = () => controllerList;
+            var controllerList = new List<VirtualNode>(controllers);
+            _getRoots = () => controllerList;
             _getInvalidationToken = () => _lastInvalidationToken;
         }
 
@@ -65,11 +64,19 @@ namespace nadena.dev.ndmf.animator
             return Enumerable.Empty<VirtualClip>();
         }
 
-        public void RewritePaths(Dictionary<string, string?> rewriteRules)
+        public void RewritePaths(Func<string, string?> rewriteRules)
         {
             if (!IsValid) RebuildCache();
 
-            List<VirtualClip> recacheNeeded = new();
+            var rewriteSet = _objectPathToClip.Values.SelectMany(s => s).Distinct();
+            
+            RewritePaths(rewriteSet, rewriteRules);
+        }
+        
+        public void RewritePaths(Dictionary<string, string?> rewriteRules)
+        {
+            if (!IsValid) RebuildCache();
+            
             HashSet<VirtualClip> rewriteSet = new();
 
             foreach (var key in rewriteRules.Keys)
@@ -85,6 +92,14 @@ namespace nadena.dev.ndmf.animator
                 if (rewriteRules.TryGetValue(k, out var v)) return v;
                 return k;
             };
+            
+            RewritePaths(rewriteSet, rewriteFunc);
+        }
+
+        private void RewritePaths(IEnumerable<VirtualClip> rewriteSet, Func<string, string?> rewriteFunc)
+        {
+            List<VirtualClip> recacheNeeded = new();
+
             foreach (var clip in rewriteSet)
             {
                 clip.EditPaths(rewriteFunc);
@@ -185,7 +200,7 @@ namespace nadena.dev.ndmf.animator
             Queue<VirtualNode> queue = new();
 
             _lastInvalidationToken = _getInvalidationToken();
-            foreach (var controller in _getControllers())
+            foreach (var controller in _getRoots())
             {
                 queue.Enqueue(controller);
             }
