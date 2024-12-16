@@ -15,6 +15,7 @@ using nadena.dev.ndmf.util;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;
+using VRC.SDK3.Avatars.Components;
 using Debug = UnityEngine.Debug;
 using UnityObject = UnityEngine.Object;
 
@@ -378,16 +379,16 @@ namespace nadena.dev.ndmf
             }
         }
 
-        public T ActivateExtensionContextRecurse<T>() where T : IExtensionContext
+        public T ActivateExtensionContextRecursive<T>() where T : IExtensionContext
         {
-            return (T) ActivateExtensionContextRecurse(typeof(T));
+            return (T) ActivateExtensionContextRecursive(typeof(T));
         }
         
-        public IExtensionContext ActivateExtensionContextRecurse(Type ty)
+        public IExtensionContext ActivateExtensionContextRecursive(Type ty)
         {
             foreach (var dependency in ty.ContextDependencies())
             {
-                ActivateExtensionContextRecurse(dependency);
+                ActivateExtensionContextRecursive(dependency);
             }
 
             return ActivateExtensionContext(ty);

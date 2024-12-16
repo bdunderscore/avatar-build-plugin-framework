@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -43,6 +44,12 @@ namespace nadena.dev.ndmf.animator
         {
             _platform = platform;
         }
+
+        internal IEnumerable<UnityEngine.Object> AllObjects => _commitCache.Values.Select(o =>
+        {
+            if (o is UnityEngine.Object unityObj) return unityObj;
+            return null;
+        }).Where(o => o != null)!;
         
         [return: NotNullIfNotNull("obj")]
         internal R? CommitObject<R>(ICommitable<R>? obj) where R : class

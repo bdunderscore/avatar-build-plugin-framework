@@ -148,8 +148,17 @@ namespace nadena.dev.ndmf.animator
                         commitContext.ActiveInnateLayerKey = kv.Key;
                         return (RuntimeAnimatorController)commitContext.CommitObject(kv.Value.VirtualController!);
                     });
-            
-            _platformBindings!.CommitControllers(root, controllers);
+
+            using (var scope = context.OpenSerializationScope())
+            {
+                _platformBindings!.CommitControllers(root, controllers);
+                
+                // Save all animator objects to prevent references from breaking later
+                foreach (var obj in commitContext.AllObjects)
+                {
+                    context.AssetSaver.SaveAsset(obj);
+                }
+            }
         }
 
         public IEnumerable<VirtualAnimatorController> GetAllControllers()

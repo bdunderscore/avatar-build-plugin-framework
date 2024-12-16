@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -97,6 +98,13 @@ namespace nadena.dev.ndmf.animator
             
             if (!root.TryGetComponent<VRCAvatarDescriptor>(out var vrcAvatarDescriptor)) yield break;
 
+            // Initialize the VRChat avatar descriptor. Unfortunately the only way to do this is to run the editor for
+            // it. Ick.
+            var editor = Editor.CreateEditor(vrcAvatarDescriptor);
+            var onEnable = AccessTools.Method(editor.GetType(), "OnEnable");
+            onEnable?.Invoke(editor, null);
+            UnityEngine.Object.DestroyImmediate(editor);
+            
             // TODO: Fallback layers
             foreach (var layer in vrcAvatarDescriptor.baseAnimationLayers)
             {
@@ -134,6 +142,8 @@ namespace nadena.dev.ndmf.animator
             EditLayers(vrcAvatarDescriptor.specialAnimationLayers);
 
             GenericPlatformAnimatorBindings.Instance.CommitControllers(root, controllers);
+
+            vrcAvatarDescriptor.customizeAnimationLayers = true;
 
             void EditLayers(VRCAvatarDescriptor.CustomAnimLayer[] layers)
             {
