@@ -4,13 +4,8 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using nadena.dev.ndmf.cs;
-using UnityEngine;
-#if NDMF_VRCSDK3_AVATARS
-using VRC.SDK3.Avatars.Components;
-
-#else
 using nadena.dev.ndmf.runtime;
-#endif
+using UnityEngine;
 
 #endregion
 
@@ -56,16 +51,9 @@ namespace nadena.dev.ndmf.preview
 
         public static ImmutableList<GameObject> GetAvatarRoots(this ComputeContext ctx)
         {
-            // TODO: multiple platform support
-#if NDMF_VRCSDK3_AVATARS
-            return ctx.GetComponentsByType<VRCAvatarDescriptor>()
+            return AvatarDescriptorComponentRegistry.Instance.AvatarRootComponentTypes
+                .SelectMany(ctx.GetComponentsByType)
                 .Select(c => c.gameObject).ToImmutableList();
-#else
-            return ctx.GetComponentsByType<Animator>()
-                .Select(c => c.gameObject)
-                .Where(g => RuntimeUtil.IsAvatarRoot(g.transform))
-                .ToImmutableList();
-#endif
         }
     }
 }

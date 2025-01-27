@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
+using nadena.dev.ndmf;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 #if NDMF_VRCSDK3_AVATARS
 using VRC.SDK3.Avatars.Components;
+#endif
+
+#if NDMF_VRCSDK3_AVATARS
+[assembly: AvatarDescriptorComponent(typeof(VRCAvatarDescriptor))]
 #endif
 
 namespace nadena.dev.ndmf.runtime
@@ -93,14 +99,7 @@ namespace nadena.dev.ndmf.runtime
         /// <returns></returns>
         public static bool IsAvatarRoot(Transform target)
         {
-#if NDMF_VRCSDK3_AVATARS
-            return target.TryGetComponent<VRCAvatarDescriptor>(out _);
-#else            
-            if (!target.TryGetComponent<Animator>(out _)) return false;
-
-            var parent = target.transform.parent;
-            return !(parent && parent.GetComponentInParent<Animator>());
-#endif
+            return AvatarDescriptorComponentRegistry.Instance.IsAvatarRoot(target.gameObject);
         }
 
         /// <summary>
@@ -129,11 +128,7 @@ namespace nadena.dev.ndmf.runtime
             else
             {
                 GameObject priorRoot = null;
-#if NDMF_VRCSDK3_AVATARS
-                var candidates = root.GetComponentsInChildren<VRCAvatarDescriptor>();
-#else
-                var candidates = root.GetComponentsInChildren<Animator>();
-#endif
+                var candidates = AvatarDescriptorComponentRegistry.Instance.GetAvatarDescriptorsInChildren(root);
                 foreach (var candidate in candidates)
                 {
                    
@@ -172,15 +167,46 @@ namespace nadena.dev.ndmf.runtime
         {
             foreach (var root in scene.GetRootGameObjects())
             {
-#if NDMF_VRCSDK3_AVATARS
-                foreach (var avatar in root.GetComponentsInChildren<VRCAvatarDescriptor>())
-#else            
-                foreach (var avatar in root.GetComponentsInChildren<Animator>())
-#endif
+                foreach (var avatar in AvatarDescriptorComponentRegistry.Instance.GetAvatarDescriptorsInChildren(root))
                 {
                     if (IsAvatarRoot(avatar.transform)) yield return avatar.transform;
                 }
             }
+        }
+    }
+
+    public sealed class AvatarDescriptorComponentRegistry
+    {
+        public static readonly AvatarDescriptorComponentRegistry Instance = new AvatarDescriptorComponentRegistry();
+
+        public Type[] AvatarRootComponentTypes { get; }
+
+        internal bool IsAvatarRoot(GameObject gameObject)
+        {
+            foreach (var type in AvatarRootComponentTypes)
+            {
+                if (gameObject.TryGetComponent(type, out _)) return true;
+            }
+            return false;
+        }
+
+        internal IEnumerable<Component> GetAvatarDescriptorsInChildren(GameObject gameObject)
+        {
+            return AvatarRootComponentTypes.SelectMany(gameObject.GetComponentsInChildren);
+        }
+
+        AvatarDescriptorComponentRegistry(IEnumerable<Type> componentTypes)
+        {
+            AvatarRootComponentTypes = componentTypes.Distinct().ToArray();
+        }
+
+        AvatarDescriptorComponentRegistry() : this(
+            AppDomain.CurrentDomain.GetAssemblies().SelectMany(
+                    assembly => assembly.GetCustomAttributes(typeof(AvatarDescriptorComponent), false))
+                .OfType<AvatarDescriptorComponent>()
+                .Select(attr => attr.AvatarDescriptorComponentType)
+        )
+        {
         }
     }
 }

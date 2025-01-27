@@ -1,14 +1,12 @@
 ﻿#region
 
-#if NDMF_VRCSDK3_AVATARS
-using VRC.SDK3.Avatars.Components;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using nadena.dev.ndmf.cs;
+using nadena.dev.ndmf.runtime;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -37,18 +35,11 @@ namespace nadena.dev.ndmf.preview
             GameObject candidate = null;
             foreach (var elem in context.ObservePath(obj.transform))
             {
-#if NDMF_VRCSDK3_AVATARS
-                if (context.GetComponent<VRCAvatarDescriptor>(elem.gameObject) != null)
+                if (RuntimeUtil.IsAvatarRoot(elem.gameObject.transform))
                 {
                     candidate = elem.gameObject;
                     break;
                 }
-#else
-                if (context.GetComponent<Animator>(elem.gameObject) != null)
-                {
-                    candidate = elem.gameObject;
-                }
-#endif
             }
 
             return candidate;
