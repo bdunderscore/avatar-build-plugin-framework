@@ -10,6 +10,7 @@ using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase;
+using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -98,12 +99,20 @@ namespace nadena.dev.ndmf.animator
             
             if (!root.TryGetComponent<VRCAvatarDescriptor>(out var vrcAvatarDescriptor)) yield break;
 
-            // Initialize the VRChat avatar descriptor. Unfortunately the only way to do this is to run the editor for
-            // it. Ick.
-            var editor = Editor.CreateEditor(vrcAvatarDescriptor);
-            var onEnable = AccessTools.Method(editor.GetType(), "OnEnable");
-            onEnable?.Invoke(editor, null);
-            UnityEngine.Object.DestroyImmediate(editor);
+            if (vrcAvatarDescriptor.baseAnimationLayers == null ||
+                vrcAvatarDescriptor.baseAnimationLayers.All(l => l.isDefault))
+            {
+                // Initialize the VRChat avatar descriptor. Unfortunately the only way to do this is to run the editor for
+                // it. Ick.
+                var editor = Editor.CreateEditor(vrcAvatarDescriptor);
+                var onEnable = AccessTools.Method(editor.GetType(), "OnEnable");
+                onEnable?.Invoke(editor, null);
+                Object.DestroyImmediate(editor);
+            }
+
+            // Make sure customizeAnimationLayers is set if we think they've been customized - otherwise the SDK
+            // likes to reset them automatically.
+            vrcAvatarDescriptor.customizeAnimationLayers = true;
             
             // TODO: Fallback layers
             foreach (var layer in vrcAvatarDescriptor.baseAnimationLayers)
