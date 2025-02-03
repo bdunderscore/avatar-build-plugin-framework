@@ -223,6 +223,12 @@ namespace nadena.dev.ndmf.animator
             return GetOrClone(clip, VirtualClip.Clone);
         }
 
+        public VirtualAvatarMask? Clone(AvatarMask layerAvatarMask)
+        {
+            using var _ = new ProfilerScope("Clone Avatar Mask", layerAvatarMask);
+            return GetOrClone(layerAvatarMask, VirtualAvatarMask.Clone);
+        }
+        
         public void DeferCall(Action action)
         {
             var overrideStack = _curDynScope;
@@ -244,5 +250,6 @@ namespace nadena.dev.ndmf.animator
                 ? layerIndex + _virtualLayerBase
                 : -1;
         }
+
     }
 }

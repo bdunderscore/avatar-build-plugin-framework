@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using UnityEditor;
 
@@ -71,8 +72,38 @@ namespace nadena.dev.ndmf.animator
             var rewriteSet = _objectPathToClip.Values.SelectMany(s => s).Distinct();
             
             RewritePaths(rewriteSet, rewriteRules);
+
+            foreach (var root in _getRoots())
+            {
+                if (root is VirtualAnimatorController vac)
+                {
+                    foreach (var layer in vac.Layers)
+                    {
+                        if (layer.AvatarMask is not null)
+                        {
+                            RewriteAvatarMask(layer.AvatarMask, rewriteRules);
+                        }
+                    }
+                }
+            }
         }
-        
+
+        private void RewriteAvatarMask(VirtualAvatarMask layerAvatarMask, Func<string, string?> rewriteRules)
+        {
+            Dictionary<string, float> outputDict = new();
+
+            foreach (var kvp in layerAvatarMask.Elements)
+            {
+                var rewritten = rewriteRules(kvp.Key);
+                if (rewritten != null)
+                {
+                    outputDict[rewritten] = kvp.Value;
+                }
+            }
+
+            layerAvatarMask.Elements = outputDict.ToImmutableDictionary();
+        }
+
         public void RewritePaths(Dictionary<string, string?> rewriteRules)
         {
             if (!IsValid) RebuildCache();

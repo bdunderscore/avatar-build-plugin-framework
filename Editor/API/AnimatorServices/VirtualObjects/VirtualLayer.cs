@@ -6,7 +6,6 @@ using System.Linq;
 using JetBrains.Annotations;
 using UnityEditor.Animations;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace nadena.dev.ndmf.animator
 {
@@ -30,9 +29,9 @@ namespace nadena.dev.ndmf.animator
             set => _stateMachine = I(value);
         }
 
-        private AvatarMask? _avatarMask;
+        private VirtualAvatarMask? _avatarMask;
 
-        public AvatarMask? AvatarMask
+        public VirtualAvatarMask? AvatarMask
         {
             get => _avatarMask;
             set => _avatarMask = I(value);
@@ -126,7 +125,7 @@ namespace nadena.dev.ndmf.animator
         {
             VirtualLayerIndex = context.CloneSourceToVirtualLayerIndex(physicalLayerIndex);
             _name = layer.name;
-            AvatarMask = layer.avatarMask == null ? null : Object.Instantiate(layer.avatarMask);
+            AvatarMask = layer.avatarMask == null ? null : context.Clone(layer.avatarMask);
             BlendingMode = layer.blendingMode;
             DefaultWeight = layer.defaultWeight;
             IKPass = layer.iKPass;
@@ -170,7 +169,7 @@ namespace nadena.dev.ndmf.animator
             var layer = new AnimatorControllerLayer
             {
                 name = Name,
-                avatarMask = AvatarMask,
+                avatarMask = null,
                 blendingMode = BlendingMode,
                 defaultWeight = DefaultWeight,
                 iKPass = IKPass,
@@ -182,6 +181,7 @@ namespace nadena.dev.ndmf.animator
 
         void ICommitable<AnimatorControllerLayer>.Commit(CommitContext context, AnimatorControllerLayer obj)
         {
+            obj.avatarMask = context.CommitObject(AvatarMask);
             obj.syncedLayerIndex = context.VirtualToPhysicalLayerIndex(SyncedLayerIndex);
             obj.stateMachine = context.CommitObject(StateMachine);
 
