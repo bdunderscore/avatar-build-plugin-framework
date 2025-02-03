@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using nadena.dev.ndmf.config;
+using nadena.dev.ndmf.cs;
 using nadena.dev.ndmf.runtime;
 using UnityEditor;
 using UnityEngine;

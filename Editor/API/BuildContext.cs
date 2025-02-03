@@ -15,6 +15,7 @@ using nadena.dev.ndmf.util;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;
+using VRC.SDK3.Avatars.Components;
 using Debug = UnityEngine.Debug;
 using UnityObject = UnityEngine.Object;
 
@@ -346,11 +347,58 @@ namespace nadena.dev.ndmf
             }
         }
 
+        public void DeactivateAllExtensionContexts()
+        {
+            Dictionary<Type, List<Type>> depIndex = new();
+            foreach (var ty in _activeExtensions.Keys)
+            {
+                foreach (var dep in ty.ContextDependencies())
+                {
+                    if (!depIndex.ContainsKey(dep))
+                    {
+                        depIndex[dep] = new List<Type>();
+                    }
+
+                    depIndex[dep].Add(ty);
+                }
+            }
+
+            while (_activeExtensions.Keys.Count > 0)
+            {
+                Type next = _activeExtensions.Keys.First();
+                Type candidate;
+                do
+                {
+                    candidate = next;
+                    var revDeps = depIndex.GetValueOrDefault(next) as IEnumerable<Type>
+                                  ?? Array.Empty<Type>();
+                    next = revDeps.FirstOrDefault(t => _activeExtensions.ContainsKey(t));
+                } while (next != null);
+                
+                DeactivateExtensionContext(candidate);
+            }
+        }
+
+        public T ActivateExtensionContextRecursive<T>() where T : IExtensionContext
+        {
+            return (T) ActivateExtensionContextRecursive(typeof(T));
+        }
+        
+        public IExtensionContext ActivateExtensionContextRecursive(Type ty)
+        {
+            foreach (var dependency in ty.ContextDependencies())
+            {
+                ActivateExtensionContextRecursive(dependency);
+            }
+
+            return ActivateExtensionContext(ty);
+        }
+        
         public T ActivateExtensionContext<T>() where T : IExtensionContext
         {
             return (T)ActivateExtensionContext(typeof(T));
         }
-
+        
         public IExtensionContext ActivateExtensionContext(Type ty)
         {
             using (new ExecutionScope(this))

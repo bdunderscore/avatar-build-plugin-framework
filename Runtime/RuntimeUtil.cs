@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 #if NDMF_VRCSDK3_AVATARS
 using VRC.SDK3.Avatars.Components;
 #endif
@@ -42,7 +42,7 @@ namespace nadena.dev.ndmf.runtime
         /// Returns whether the editor is in play mode.
         /// </summary>
 #if UNITY_EDITOR
-        public static bool IsPlaying => UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode;
+        public static bool IsPlaying => EditorApplication.isPlayingOrWillChangePlaymode;
 #else
         public static bool IsPlaying => true;
 #endif
@@ -56,21 +56,33 @@ namespace nadena.dev.ndmf.runtime
         [CanBeNull]
         public static string RelativePath(GameObject root, GameObject child)
         {
+            return RelativePath(root?.transform, child?.transform);
+        }
+
+        /// <summary>
+        ///     Returns the relative path from root to child, or null is child is not a descendant of root.
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="child"></param>
+        /// <returns></returns>
+        [CanBeNull]
+        public static string RelativePath(Transform root, Transform child)
+        {
             if (root == child) return "";
 
-            List<string> pathSegments = new List<string>();
+            var pathSegments = new List<string>();
             while (child != root && child != null)
             {
-                pathSegments.Add(child.name);
-                child = child.transform.parent?.gameObject;
+                pathSegments.Add(child.gameObject.name);
+                child = child.parent;
             }
 
             if (child == null && root != null) return null;
 
             pathSegments.Reverse();
-            return String.Join("/", pathSegments);
+            return string.Join("/", pathSegments);
         }
-
+        
         /// <summary>
         /// Returns the path of a game object relative to the avatar root, or null if the avatar root could not be
         /// located.
