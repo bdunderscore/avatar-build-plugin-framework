@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 #if NDMF_VRCSDK3_AVATARS
 using VRC.SDK3.Avatars.Components;
@@ -90,7 +90,7 @@ namespace nadena.dev.ndmf.preview
         )
             where R : IEquatable<R>
         {
-            return ctx.Observe(val, extract, (a, b) => a.Equals(b), callerPath: callerPath, callerLine: callerLine);
+            return ctx.Observe(val, extract, (a, b) => a is null ? b is null : a.Equals(b), callerPath: callerPath, callerLine: callerLine);
         }
 
         /// <summary>
